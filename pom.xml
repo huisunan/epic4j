@@ -37,9 +37,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-server</artifactId>
-            <version>3.141.59</version>
+            <groupId>io.github.fanyong920</groupId>
+            <artifactId>jvppeteer</artifactId>
+            <version>1.1.4</version>
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>

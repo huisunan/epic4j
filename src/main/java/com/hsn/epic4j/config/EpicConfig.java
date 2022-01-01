@@ -16,13 +16,9 @@ import java.util.List;
 @ConfigurationProperties(prefix = "epic")
 public class EpicConfig {
     /**
-     * webDriver的路径
-     */
-    private String driverPath;
-    /**
      * webDriver的用户数据
      */
-    private String driverDataPath = "./data";
+    private String dataPath = "./data";
     /**
      * webDriver启动参数
      */
@@ -31,4 +27,24 @@ public class EpicConfig {
      * epic url
      */
     private String epicUrl;
+    /**
+     * 邮箱
+     */
+    private String email;
+    /**
+     * 密码
+     */
+    private String password;
+    /**
+     * 无头模式
+     */
+    private Boolean headLess = false;
+    /**
+     * 浏览器版本
+     */
+    private String browserVersion = "588429";
+    /**
+     * 是否登录判断url
+     */
+    private String checkLoginUrl = "https://www.epicgames.com/account/v2/ajaxCheckLogin";
 }
