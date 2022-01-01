@@ -1,0 +1,10 @@
+epic:
+  epic-url: https://www.epicgames.com/store/en-US/
+  driver-args:
+    - "disable-infobars"
+    - "blink-settings=imagesEnabled=false"
+    - "no-first-run"
+    - "disable-gpu"
+spring:
+  profiles:
+    active: dev

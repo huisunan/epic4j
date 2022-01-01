@@ -1,0 +1,5 @@
+epic:
+  driver-path: ./driver/chromedriver.exe
+logging:
+  level:
+    com.hsn.epic4j: debug
