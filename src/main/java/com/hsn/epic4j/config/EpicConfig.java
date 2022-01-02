@@ -42,9 +42,21 @@ public class EpicConfig {
     /**
      * 浏览器版本
      */
-    private String browserVersion = "588429";
+    private String browserVersion;
     /**
      * 是否登录判断url
      */
     private String checkLoginUrl = "https://www.epicgames.com/account/v2/ajaxCheckLogin";
+    /**
+     * 获取用户信息url
+     */
+    private String userInfoUrl = "https://www.epicgames.com/account/v2/personal/ajaxGet?sessionInvalidated=true";
+    /**
+     * 免费游戏url
+     */
+    private String freeGameUrl = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale={}&country={}&allowCountries={}";
+    /**
+     * 商店项url
+     */
+    private String storeUrl = "https://www.epicgames.com/store/en-US/p/{}";
 }

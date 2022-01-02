@@ -1,0 +1,53 @@
+package com.hsn.epic4j.start;
+
+import cn.hutool.core.util.StrUtil;
+import com.hsn.epic4j.config.EpicConfig;
+import com.hsn.epic4j.exception.PermissionException;
+import com.hsn.epic4j.exception.TimeException;
+import com.hsn.epic4j.util.PageUtil;
+import com.ruiyun.jvppeteer.core.page.Page;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+public class PasswordLogin implements ILogin{
+    @Autowired
+    EpicConfig epicConfig;
+
+    @Override
+    @SneakyThrows
+    public void login(Page page) {
+
+        if (StrUtil.isEmpty(epicConfig.getEmail())) {
+            log.error("账号不能为空");
+            return;
+        }
+        if (StrUtil.isEmpty(epicConfig.getPassword())) {
+            log.error("密码不能为空");
+            return;
+        }
+        page.waitForSelector("div.menu-icon").click();
+        page.waitForSelector("div.mobile-buttons a[href='/login']").click();
+        page.waitForSelector("#login-with-epic").click();
+        page.waitForSelector("#email").type(epicConfig.getEmail());
+        page.waitForSelector("#password").type(epicConfig.getPassword());
+//        page.waitForSelector("#rememberMe").click();
+        page.waitForSelector("#sign-in[tabindex='0']").click();
+        Integer result = PageUtil.findSelectors(page,10, "#talon_frame_login_prod[style*=visible]", "div.MuiPaper-root[role=alert] h6[class*=subtitle1]", "input[name=code-input-0]", "#user");
+        switch (result) {
+            case -1:
+                throw new TimeException("Check login result timeout.");
+            case 0:
+                throw new PermissionException("CAPTCHA is required for unknown reasons when logging in");
+            case 1: {
+                Object jsonValue = page.waitForSelector("div.MuiPaper-root[role=alert] h6[class*=subtitle1]")
+                        .getProperty("textContent").jsonValue();
+                throw new PermissionException("From Epic Games: " + jsonValue);
+            }
+        }
+        log.debug("login end");
+    }
+}
