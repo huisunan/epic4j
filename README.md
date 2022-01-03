@@ -8,10 +8,31 @@
 
 ### window
 
+#### ide下运行
+
 需要环境 jdk8+,maven 拉取项目编译后运行
+
+#### 命令行运行
+
+[下载jar包](https://github.com/huisunan/epic4j/releases)
+
+```shell
+java -jar -Depic.email=[你的账号] -Depic.password[你的密码] epic4j.jar 
+```
 
 ### Docker
 
+```shell
+#docker拉取
+docker pull huisunan/epic4j:latest
+#密码登录
+docker run -d -e EMAIL=[你的邮箱] -e PASSWORD=[你的密码] --name epic4j huisunan/epic4j:latest
+#debug模式运行
+docker run -d -e EMAIL=[你的邮箱] -e PASSWORD=[你的密码] -e LOG_LEVEL=debug --name epic4j huisunan/epic4j:latest
+#cookie登录
+docker run -d -e EMAIL=[你的邮箱] -e PASSWORD=[你的密码] -e COOKIE_PATH=[cookie路径] -v [本机cookie路径]:[cookie路径] --name epic4j huisunan/epic4j:latest
+
+```
 ## 配置
 
 ### yaml
@@ -45,7 +66,9 @@ epic:
   # crontab表达式,不填写的情况下是每天程序启动的时分秒运行一次
   cron:
   # noSandbox非沙盒运行
-  noSandbox: true
+  no-sandbox: true
+  # cookie cookie路径,如果路径不为空会加载cookie
+  cookie-path: 
 ```
 
 ### 环境变量
@@ -57,6 +80,15 @@ epic:
 |EMAIL|邮箱地址||
 |PASSWORD|密码||
 |LOG_LEVEL|日志级别|日志级别为debug可以看到更多的日志,并且在有异常抛出时会截图到error/目录下|
+|COOKIE_PATH|cookie路径|cookie不为空则加载,docker下通过挂载目录的方式,加载cookie路径|
+|CRON|cron表达式|定时任务([表达式验证](https://www.bejson.com/othertools/cronvalidate/))|
 
+## 计划
 
+|名称|状态|
+|---|----|
+|cookie登录|✅|
+|i18n支持||
+|消息推送||
+|自动更新||
 

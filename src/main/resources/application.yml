@@ -8,7 +8,10 @@ epic:
   email: ${EMAIL}
   password: ${PASSWORD}
   cookie-path: ${COOKIE_PATH}
+  cron: ${CRON:}
+  version: @project.version@
 logging:
   level:
     com.hsn.epic4j: ${LOG_LEVEL:info}
+
 

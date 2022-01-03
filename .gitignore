@@ -34,3 +34,4 @@ build/
 data/
 .local-browser/
 /error/
+/test/

@@ -20,11 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.io.FileUrlResource;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
@@ -87,14 +89,12 @@ public class EpicRunner implements ApplicationRunner {
             //获取默认page
             Page page = iStart.getDefaultPage(browser);
             //加载cookie
-            if (StrUtil.isNotBlank(epicConfig.getCookiePath()) && FileUtil.exist(epicConfig.getCookiePath())
-                    && !FileUtil.exist("/usr/src/app/loadCookie")) {
+            if (StrUtil.isNotBlank(epicConfig.getCookiePath()) && FileUtil.exist(epicConfig.getCookiePath())) {
                 log.debug("load cookie");
                 List<CookieParam> cookies = JSONUtil.toBean(IoUtil.read(new FileReader(epicConfig.getCookiePath())),
                         new TypeReference<List<CookieParam>>() {
                         }, false);
                 page.setCookie(cookies);
-                FileUtil.newFile("/usr/src/app/loadCookie");
             }
             //反爬虫设置
             PageUtil.crawSet(page);
@@ -119,11 +119,13 @@ public class EpicRunner implements ApplicationRunner {
                         .filter(CollUtil::isNotEmpty)
                         .map(pages -> pages.get(0))
                         .ifPresent(page -> {
-                            ScreenshotOptions options = new ScreenshotOptions();
-                            options.setQuality(100);
-                            options.setPath("error/" + System.currentTimeMillis() + ".jpg");
-                            options.setType("jpeg");
                             try {
+                                FileUrlResource errorDir = new FileUrlResource("error");
+                                log.debug("create error dir {}", errorDir.getFile().mkdirs());
+                                ScreenshotOptions options = new ScreenshotOptions();
+                                options.setQuality(100);
+                                options.setPath(errorDir.getFile().getAbsolutePath() + File.separator + System.currentTimeMillis() + ".jpg");
+                                options.setType("jpeg");
                                 page.screenshot(options);
                             } catch (IOException ioException) {
                                 log.error("截图失败");

@@ -10,22 +10,22 @@ import com.hsn.epic4j.aop.Retry;
 import com.hsn.epic4j.bean.Item;
 import com.hsn.epic4j.config.EpicConfig;
 import com.hsn.epic4j.util.PageUtil;
+import com.ruiyun.jvppeteer.core.Constant;
 import com.ruiyun.jvppeteer.core.Puppeteer;
 import com.ruiyun.jvppeteer.core.browser.Browser;
+import com.ruiyun.jvppeteer.core.browser.BrowserFetcher;
 import com.ruiyun.jvppeteer.core.page.Page;
 import com.ruiyun.jvppeteer.options.LaunchOptions;
 import com.ruiyun.jvppeteer.options.LaunchOptionsBuilder;
 import com.ruiyun.jvppeteer.options.Viewport;
+import com.ruiyun.jvppeteer.util.FileUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileUrlResource;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -45,7 +45,6 @@ public class MainStart implements IStart {
 
     @Override
     @SneakyThrows
-    @Retry(message = "浏览器打开异常")
     public Browser getBrowser() {
         String dataPath = new FileUrlResource(epicConfig.getDataPath()).getFile().getAbsolutePath();
         log.debug("driver data path :{}", dataPath);
@@ -53,6 +52,13 @@ public class MainStart implements IStart {
             epicConfig.getDriverArgs().add("--no-sandbox");
         }
         //自动下载，第一次下载后不会再下载
+        if (Arrays.stream(Constant.EXECUTABLE_ENV).noneMatch(env -> {
+            String chromeExecutable = System.getenv(env);
+            return StrUtil.isNotBlank(chromeExecutable) && FileUtil.assertExecutable(chromeExecutable);
+        })) {
+            BrowserFetcher.downloadIfNotExist();
+        }
+
         LaunchOptions options = new LaunchOptionsBuilder()
                 .withArgs(epicConfig.getDriverArgs())
                 .withHeadless(epicConfig.getHeadLess())
@@ -98,7 +104,7 @@ public class MainStart implements IStart {
             log.debug("item url:{}", itemUrl);
             page.goTo(itemUrl);
             //age limit
-            PageUtil.tryClick(page,"div[data-component=PDPAgeGate] Button",itemUrl,8,1000);
+            PageUtil.tryClick(page, "div[data-component=PDPAgeGate] Button", itemUrl, 8, 1000);
             String textContent = PageUtil.getStrProperty(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "textContent");
             if ("In Library".equals(textContent)) {
                 log.debug("{} had receive", item.getTitle());

@@ -71,4 +71,8 @@ public class EpicConfig {
      * cookiePath
      */
     private String cookiePath;
+    /**
+     * 版本
+     */
+    private String version;
 }
