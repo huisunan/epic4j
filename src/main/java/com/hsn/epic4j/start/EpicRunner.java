@@ -80,7 +80,6 @@ public class EpicRunner implements ApplicationRunner {
                     break;
                 }
             }
-            TimeUnit.SECONDS.sleep(30);
         } catch (Exception e) {
             log.error("程序异常", e);
         } finally {

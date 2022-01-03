@@ -12,7 +12,6 @@ public class Epic4jApplication {
 
     public static void main(String[] args) throws IOException {
         SpringApplication.run(Epic4jApplication.class, args);
-        System.out.println("wait for finish");
         System.in.read();
     }
 
