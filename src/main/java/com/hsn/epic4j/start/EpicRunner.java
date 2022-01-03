@@ -3,13 +3,19 @@ package com.hsn.epic4j.start;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.hsn.epic4j.bean.Item;
 import com.hsn.epic4j.config.EpicConfig;
 import com.hsn.epic4j.notify.INotify;
+import com.hsn.epic4j.util.PageUtil;
 import com.ruiyun.jvppeteer.core.browser.Browser;
 import com.ruiyun.jvppeteer.core.page.Page;
 import com.ruiyun.jvppeteer.options.ScreenshotOptions;
+import com.ruiyun.jvppeteer.protocol.network.CookieParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -19,6 +25,7 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -79,8 +86,18 @@ public class EpicRunner implements ApplicationRunner {
             browser = iStart.getBrowser();
             //获取默认page
             Page page = iStart.getDefaultPage(browser);
-            //反爬虫配置
-            iStart.crawlerTest(page);
+            //加载cookie
+            if (StrUtil.isNotBlank(epicConfig.getCookiePath()) && FileUtil.exist(epicConfig.getCookiePath())
+                    && !FileUtil.exist("/usr/src/app/loadCookie")) {
+                log.debug("load cookie");
+                List<CookieParam> cookies = JSONUtil.toBean(IoUtil.read(new FileReader(epicConfig.getCookiePath())),
+                        new TypeReference<List<CookieParam>>() {
+                        }, false);
+                page.setCookie(cookies);
+                FileUtil.newFile("/usr/src/app/loadCookie");
+            }
+            //反爬虫设置
+            PageUtil.crawSet(page);
             //打开epic主页
             page.goTo(epicConfig.getEpicUrl());
             boolean needLogin = iStart.needLogin(browser);

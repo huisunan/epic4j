@@ -18,14 +18,12 @@ public interface IStart {
      */
     Page getDefaultPage(Browser browser);
 
-    void crawlerTest(Page page);
 
     @SneakyThrows
     boolean needLogin(Browser browser);
 
     /**
      * 领取游戏
-     * @return
      */
     List<Item> receive(Page page);
 }

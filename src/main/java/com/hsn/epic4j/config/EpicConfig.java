@@ -67,4 +67,8 @@ public class EpicConfig {
      * 非沙盒运行
      */
     private Boolean noSandbox = true;
+    /**
+     * cookiePath
+     */
+    private String cookiePath;
 }
