@@ -24,13 +24,14 @@ RUN mkdir -p /usr/src/app \
     && adduser -D chrome \
     && chown -R chrome:chrome /usr/src/app
 
-COPY target/epic4j.jar /usr/src/app/epic4j.jar
-
 ENV DEBIAN_FRONTEND=noninteractive TZ=Asia/Shanghai
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 # Run Chrome as non-privileged
 USER chrome
+
+COPY target/epic4j.jar /usr/src/app/epic4j.jar
 RUN touch /usr/src/app/application.yml
+RUN mkdir /usr/src/app/error
 WORKDIR /usr/src/app
 
 

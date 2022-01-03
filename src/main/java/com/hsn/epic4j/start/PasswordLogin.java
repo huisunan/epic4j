@@ -12,9 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 @Component
-public class PasswordLogin implements ILogin{
+public class PasswordLogin implements ILogin {
     @Autowired
     EpicConfig epicConfig;
 
@@ -30,13 +32,15 @@ public class PasswordLogin implements ILogin{
         }
         log.debug("login start");
         page.waitForSelector("div.menu-icon").click();
+        //睡眠等待完全展开
+        TimeUnit.SECONDS.sleep(1);
         page.waitForSelector("div.mobile-buttons a[href='/login']").click();
         page.waitForSelector("#login-with-epic").click();
         page.waitForSelector("#email").type(epicConfig.getEmail());
         page.waitForSelector("#password").type(epicConfig.getPassword());
 //        page.waitForSelector("#rememberMe").click();
         page.waitForSelector("#sign-in[tabindex='0']").click();
-        Integer result = PageUtil.findSelectors(page,10, "#talon_frame_login_prod[style*=visible]", "div.MuiPaper-root[role=alert] h6[class*=subtitle1]", "input[name=code-input-0]", "#user");
+        Integer result = PageUtil.findSelectors(page, 30000, "#talon_frame_login_prod[style*=visible]", "div.MuiPaper-root[role=alert] h6[class*=subtitle1]", "input[name=code-input-0]", "#user");
         switch (result) {
             case -1:
                 throw new TimeException("Check login result timeout.");
@@ -46,6 +50,9 @@ public class PasswordLogin implements ILogin{
                 Object jsonValue = page.waitForSelector("div.MuiPaper-root[role=alert] h6[class*=subtitle1]")
                         .getProperty("textContent").jsonValue();
                 throw new PermissionException("From Epic Games: " + jsonValue);
+            }
+            case 2: {
+                throw new PermissionException("From Epic Games need code");
             }
         }
         log.debug("login end");

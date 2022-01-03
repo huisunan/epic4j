@@ -1,5 +1,6 @@
 package com.hsn.epic4j.start;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
@@ -8,18 +9,20 @@ import com.hsn.epic4j.config.EpicConfig;
 import com.hsn.epic4j.notify.INotify;
 import com.ruiyun.jvppeteer.core.browser.Browser;
 import com.ruiyun.jvppeteer.core.page.Page;
-import com.ruiyun.jvppeteer.options.PageNavigateOptions;
+import com.ruiyun.jvppeteer.options.ScreenshotOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 @Component
 @Slf4j
@@ -36,24 +39,36 @@ public class EpicRunner implements ApplicationRunner {
     @Autowired
     List<INotify> notifies;
 
+    CountDownLatch lock = new CountDownLatch(1);
+
+    ThreadPoolTaskScheduler scheduler;
 
     @Override
-    public void run(ApplicationArguments args) {
+    public void run(ApplicationArguments args) throws InterruptedException {
         doStart();
         initCron();
+        lock.await();
     }
 
-    public void initCron(){
-        String cronExpression = epicConfig.getCron();
-        if (StrUtil.isBlank(cronExpression)){
-            DateTime now = DateUtil.date();
-            cronExpression =  StrUtil.format("{} {} {} * * ?", now.second(), now.minute(), now.hour(true));
+    @PreDestroy
+    public void free() {
+        lock.countDown();
+        if (scheduler != null) {
+            scheduler.shutdown();
         }
-        log.info("use cron:{}",cronExpression);
-        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+    }
+
+    public void initCron() {
+        String cronExpression = epicConfig.getCron();
+        if (StrUtil.isBlank(cronExpression)) {
+            DateTime now = DateUtil.date();
+            cronExpression = StrUtil.format("{} {} {} * * ?", now.second(), now.minute(), now.hour(true));
+        }
+        log.info("use cron:{}", cronExpression);
+        scheduler = new ThreadPoolTaskScheduler();
         scheduler.initialize();
         String finalCronExpression = cronExpression;
-        scheduler.schedule(this::doStart, context->new CronTrigger(finalCronExpression).nextExecutionTime(context));
+        scheduler.schedule(this::doStart, context -> new CronTrigger(finalCronExpression).nextExecutionTime(context));
     }
 
     public void doStart() {
@@ -81,6 +96,23 @@ public class EpicRunner implements ApplicationRunner {
                 }
             }
         } catch (Exception e) {
+            if (log.isDebugEnabled()) {
+                Optional.ofNullable(browser)
+                        .map(Browser::pages)
+                        .filter(CollUtil::isNotEmpty)
+                        .map(pages -> pages.get(0))
+                        .ifPresent(page -> {
+                            ScreenshotOptions options = new ScreenshotOptions();
+                            options.setQuality(100);
+                            options.setPath("error/" + System.currentTimeMillis() + ".jpg");
+                            options.setType("jpeg");
+                            try {
+                                page.screenshot(options);
+                            } catch (IOException ioException) {
+                                log.error("截图失败");
+                            }
+                        });
+            }
             log.error("程序异常", e);
         } finally {
             if (browser != null) {

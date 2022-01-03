@@ -1,0 +1,1 @@
+mvn clean package -Dmaven.test.skip=true   && docker build -t epic4j:1.0.0 .

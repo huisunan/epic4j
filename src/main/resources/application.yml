@@ -3,7 +3,12 @@ epic:
   driver-args:
     - "--blink-settings=imagesEnabled=false"
     - "--no-first-run"
+    - "--disable-infobars"
     - "--disable-gpu"
     - "--no-default-browser-check"
-    - "--no-sandbox"
+  email: ${EMAIL}
+  password: ${PASSWORD}
+logging:
+  level:
+    com.hsn.epic4j: ${LOG_LEVEL:info}
 

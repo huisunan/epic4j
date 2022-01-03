@@ -12,7 +12,6 @@ import com.hsn.epic4j.config.EpicConfig;
 import com.hsn.epic4j.util.PageUtil;
 import com.ruiyun.jvppeteer.core.Puppeteer;
 import com.ruiyun.jvppeteer.core.browser.Browser;
-import com.ruiyun.jvppeteer.core.browser.BrowserFetcher;
 import com.ruiyun.jvppeteer.core.page.Page;
 import com.ruiyun.jvppeteer.options.LaunchOptions;
 import com.ruiyun.jvppeteer.options.LaunchOptionsBuilder;
@@ -50,6 +49,9 @@ public class MainStart implements IStart {
     public Browser getBrowser() {
         String dataPath = new FileUrlResource(epicConfig.getDataPath()).getFile().getAbsolutePath();
         log.debug("driver data path :{}", dataPath);
+        if (epicConfig.getNoSandbox()) {
+            epicConfig.getDriverArgs().add("--no-sandbox");
+        }
         //自动下载，第一次下载后不会再下载
         LaunchOptions options = new LaunchOptionsBuilder()
                 .withArgs(epicConfig.getDriverArgs())
@@ -68,6 +70,7 @@ public class MainStart implements IStart {
         Viewport viewport = new Viewport();
         viewport.setWidth(600);
         viewport.setHeight(1000);
+        viewport.setHasTouch(true);
         page.setViewport(viewport);
         return page;
     }

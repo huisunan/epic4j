@@ -63,4 +63,8 @@ public class EpicConfig {
      * crontab 表达式
      */
     private String cron;
+    /**
+     * 非沙盒运行
+     */
+    private Boolean noSandbox = true;
 }
