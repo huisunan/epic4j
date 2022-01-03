@@ -47,7 +47,7 @@ public class EpicRunner implements ApplicationRunner {
         String cronExpression = epicConfig.getCron();
         if (StrUtil.isBlank(cronExpression)){
             DateTime now = DateUtil.date();
-            cronExpression =  StrUtil.format("{} {} {} * * ?", (now.second() + 10)%60, now.minute(), now.hour(true));
+            cronExpression =  StrUtil.format("{} {} {} * * ?", now.second(), now.minute(), now.hour(true));
         }
         log.info("use cron:{}",cronExpression);
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
