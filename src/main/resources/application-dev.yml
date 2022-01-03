@@ -1,4 +1,6 @@
 epic:
+  head-less: false
 logging:
   level:
     com.hsn.epic4j: debug
+

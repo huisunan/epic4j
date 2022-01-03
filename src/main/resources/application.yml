@@ -5,7 +5,5 @@ epic:
     - "--no-first-run"
     - "--disable-gpu"
     - "--no-default-browser-check"
+    - "--no-sandbox"
 
-spring:
-  profiles:
-    active: dev

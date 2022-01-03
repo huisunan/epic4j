@@ -51,7 +51,6 @@ public class MainStart implements IStart {
         String dataPath = new FileUrlResource(epicConfig.getDataPath()).getFile().getAbsolutePath();
         log.debug("driver data path :{}", dataPath);
         //自动下载，第一次下载后不会再下载
-        BrowserFetcher.downloadIfNotExist(epicConfig.getBrowserVersion());
         LaunchOptions options = new LaunchOptionsBuilder()
                 .withArgs(epicConfig.getDriverArgs())
                 .withHeadless(epicConfig.getHeadLess())
@@ -114,6 +113,8 @@ public class MainStart implements IStart {
             String itemUrl = StrUtil.format(epicConfig.getStoreUrl(), item.getProductSlug());
             log.debug("item url:{}", itemUrl);
             page.goTo(itemUrl);
+            //age limit
+            PageUtil.tryClick(page,"div[data-component=PDPAgeGate] Button",itemUrl,8,1000);
             String textContent = PageUtil.getStrProperty(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "textContent");
             if ("In Library".equals(textContent)) {
                 log.debug("{} had receive", item.getTitle());
@@ -122,14 +123,17 @@ public class MainStart implements IStart {
             page.waitForSelector("div[data-component=WithClickTracking] button").click();
             //epic user licence check
             log.debug("user licence check");
-            PageUtil.tryClick(page,"div[data-component=makePlatformUnsupportedWarningStep] button[data-component=BaseButton",itemUrl);
-            PageUtil.tryClick(page,"#agree",itemUrl);
-            PageUtil.tryClick(page,"div[data-component=EulaModalActions] button[data-component=BaseButton]",itemUrl);
+            PageUtil.tryClick(page, "div[data-component=makePlatformUnsupportedWarningStep] button[data-component=BaseButton", itemUrl);
+            PageUtil.tryClick(page, "#agree", itemUrl);
+            PageUtil.tryClick(page, "div[data-component=EulaModalActions] button[data-component=BaseButton]", itemUrl);
             String purchaseUrl = PageUtil.getStrProperty(page, "#webPurchaseContainer iframe", "src");
-            log.debug("purchase url :{}",purchaseUrl);
+            log.debug("purchase url :{}", purchaseUrl);
             page.goTo(purchaseUrl);
             page.waitForSelector("#purchase-app button[class*=confirm]:not([disabled])").click();
             receiveItem.add(item);
+        }
+        if (receiveItem.isEmpty()) {
+            log.info("all free week games in your library:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));
         }
         return receiveItem;
     }

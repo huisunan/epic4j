@@ -1,5 +1,8 @@
 package com.hsn.epic4j.start;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.hsn.epic4j.bean.Item;
 import com.hsn.epic4j.config.EpicConfig;
 import com.hsn.epic4j.notify.INotify;
@@ -10,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.scheduling.Trigger;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -32,9 +38,28 @@ public class EpicRunner implements ApplicationRunner {
 
 
     @Override
-    public void run(ApplicationArguments args){
+    public void run(ApplicationArguments args) {
+        doStart();
+        initCron();
+    }
+
+    public void initCron(){
+        String cronExpression = epicConfig.getCron();
+        if (StrUtil.isBlank(cronExpression)){
+            DateTime now = DateUtil.date();
+            cronExpression =  StrUtil.format("{} {} {} * * ?", (now.second() + 10)%60, now.minute(), now.hour(true));
+        }
+        log.info("use cron:{}",cronExpression);
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.initialize();
+        String finalCronExpression = cronExpression;
+        scheduler.schedule(this::doStart, context->new CronTrigger(finalCronExpression).nextExecutionTime(context));
+    }
+
+    public void doStart() {
         Browser browser = null;
         try {
+            log.info("start work");
             //获取浏览器对象
             browser = iStart.getBrowser();
             //获取默认page
@@ -44,14 +69,14 @@ public class EpicRunner implements ApplicationRunner {
             //打开epic主页
             page.goTo(epicConfig.getEpicUrl());
             boolean needLogin = iStart.needLogin(browser);
-            log.debug("needLogin:{}",needLogin);
+            log.debug("needLogin:{}", needLogin);
             if (needLogin) {
                 iLogin.login(page);
             }
             //领取游戏
             List<Item> receive = iStart.receive(page);
             for (INotify notify : notifies) {
-                if (notify.notifyReceive(receive)){
+                if (notify.notifyReceive(receive)) {
                     break;
                 }
             }

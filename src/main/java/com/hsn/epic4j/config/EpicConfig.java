@@ -38,7 +38,7 @@ public class EpicConfig {
     /**
      * 无头模式
      */
-    private Boolean headLess = false;
+    private Boolean headLess = true;
     /**
      * 浏览器版本
      */
@@ -59,4 +59,8 @@ public class EpicConfig {
      * 商店项url
      */
     private String storeUrl = "https://www.epicgames.com/store/en-US/p/{}";
+    /**
+     * crontab 表达式
+     */
+    private String cron;
 }

@@ -2,6 +2,7 @@ package com.hsn.epic4j.start;
 
 import cn.hutool.core.util.StrUtil;
 import com.hsn.epic4j.config.EpicConfig;
+import com.hsn.epic4j.exception.CheckException;
 import com.hsn.epic4j.exception.PermissionException;
 import com.hsn.epic4j.exception.TimeException;
 import com.hsn.epic4j.util.PageUtil;
@@ -22,13 +23,12 @@ public class PasswordLogin implements ILogin{
     public void login(Page page) {
 
         if (StrUtil.isEmpty(epicConfig.getEmail())) {
-            log.error("账号不能为空");
-            return;
+            throw new CheckException("账号不能为空");
         }
         if (StrUtil.isEmpty(epicConfig.getPassword())) {
-            log.error("密码不能为空");
-            return;
+            throw new CheckException("密码不能为空");
         }
+        log.debug("login start");
         page.waitForSelector("div.menu-icon").click();
         page.waitForSelector("div.mobile-buttons a[href='/login']").click();
         page.waitForSelector("#login-with-epic").click();
