@@ -48,9 +48,13 @@ public class EpicRunner implements ApplicationRunner {
     @Autowired
     List<INotify> notifies;
 
+    @Autowired
+    IUpdate update;
+
     CountDownLatch lock = new CountDownLatch(1);
 
     ThreadPoolTaskScheduler scheduler;
+
 
     @Override
     public void run(ApplicationArguments args) throws InterruptedException {
@@ -81,6 +85,7 @@ public class EpicRunner implements ApplicationRunner {
     }
 
     public void doStart() {
+        update.checkForUpdate();
         Browser browser = null;
         try {
             log.info("start work");
@@ -139,4 +144,5 @@ public class EpicRunner implements ApplicationRunner {
             }
         }
     }
+
 }

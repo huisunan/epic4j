@@ -10,6 +10,8 @@ epic:
   cookie-path: ${COOKIE_PATH}
   cron: ${CRON:}
   version: @project.version@
+  # 更新类型
+  update-type: maven
 logging:
   level:
     com.hsn.epic4j: ${LOG_LEVEL:info}

@@ -75,4 +75,12 @@ public class EpicConfig {
      * 版本
      */
     private String version;
+    /**
+     * git tag url
+     */
+    private String gitTagUrl = "https://github.com/huisunan/epic4j/tags";
+    /**
+     * 更新类型
+     */
+    private String updateType;
 }
