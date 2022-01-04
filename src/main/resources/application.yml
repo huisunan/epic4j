@@ -12,6 +12,7 @@ epic:
   version: @project.version@
   # 更新类型
   update-type: maven
+  auto-update: ${AUTO_UPDATE:false}
 logging:
   level:
     com.hsn.epic4j: ${LOG_LEVEL:info}

@@ -18,7 +18,7 @@ public class EpicConfig {
     /**
      * webDriver的用户数据
      */
-    private String dataPath = "./data";
+    private String dataPath = "./data/chrome";
     /**
      * webDriver启动参数
      */
@@ -83,4 +83,8 @@ public class EpicConfig {
      * 更新类型
      */
     private String updateType;
+    /**
+     * 自动更新
+     */
+    private Boolean autoUpdate;
 }

@@ -20,19 +20,18 @@ RUN echo "http://mirrors.aliyun.com/alpine/edge/main" > /etc/apk/repositories \
 COPY local.conf /etc/fonts/local.conf
 
 
-RUN mkdir -p /usr/src/app \
+RUN mkdir -p /opt/epic4j \
     && adduser -D chrome \
-    && chown -R chrome:chrome /usr/src/app
+    && chown -R chrome:chrome /opt/epic4j
 
 ENV DEBIAN_FRONTEND=noninteractive TZ=Asia/Shanghai
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 # Run Chrome as non-privileged
 USER chrome
 
-COPY target/epic4j.jar /usr/src/app/epic4j.jar
-RUN touch /usr/src/app/application.yml
-RUN mkdir /usr/src/app/error
-WORKDIR /usr/src/app
+COPY target/epic4j.jar /opt/epic4j/epic4j.jar
+COPY start.sh /opt/epic4j/start.sh
+WORKDIR /opt/epic4j
 
 
-CMD java -jar epic4j.jar
+CMD /opt/epic4j/start.sh

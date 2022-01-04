@@ -36,12 +36,13 @@ public class MavenUpdate implements IUpdate {
                 .max(((o1, o2) -> compare.compare(o1.getVersion(), o2.getVersion())))
                 .ifPresent(latestDto -> {
                     if (compare.compare(latestDto.getVersion(), epicConfig.getVersion()) > 0) {
-                        String downloadUrl = StrUtil.format(aliDownloadUrl, latestDto.getVersion(), latestDto.getVersion());
-                        File file = new File("test/" + latestDto.getFileName());
-                        HttpUtil.downloadFile(downloadUrl, file);
                         log.debug("need update");
+                        String downloadUrl = StrUtil.format(aliDownloadUrl, latestDto.getVersion(), latestDto.getVersion());
+                        File file = new File("epic4j.jar.update");
+                        HttpUtil.downloadFile(downloadUrl, file);
+                        log.debug("download new version:{}", latestDto.getVersion());
+                        System.exit(UPDATE_EXIT_CODE);
                     }
                 });
-        log.info(string);
     }
 }

@@ -33,11 +33,37 @@ docker run -d -e EMAIL=[你的邮箱] -e PASSWORD=[你的密码] -e LOG_LEVEL=de
 docker run -d -e EMAIL=[你的邮箱] -e PASSWORD=[你的密码] -e COOKIE_PATH=[cookie路径] -v [本机cookie路径]:[cookie路径] --name epic4j huisunan/epic4j:latest
 
 ```
+
+**挂载配置文件方式运行(推荐)**
+
+[具体配置](#yaml)
+
+```shell
+mkdir ~/epic4j
+vim ~/epic4j/application.yml
+```
+
+application.yml的配置如下
+
+```yaml
+epic:
+  email: 你的邮箱
+  password: 你的密码
+  #开启自动更新,可选
+  auto-update: true
+```
+
+运行docker容器,挂载配置文件到/opt/epic4j/config下
+
+```shell
+docker run -d -v ~/epic4j:/opt/epic4j/config --name myepic huisunan/epic4j:latest
+```
+
 ## 配置
 
 ### yaml
 
-其中的参数值为默认值
+其中的参数值为默认值<sapan id="yaml"></sapn>
 
 ```yaml
 epic:
@@ -68,7 +94,9 @@ epic:
   # noSandbox非沙盒运行
   no-sandbox: true
   # cookie cookie路径,如果路径不为空会加载cookie
-  cookie-path: 
+  cookie-path:
+  # 自动更新默认为false,true开启
+  auto-update: false
 ```
 
 ### 环境变量
@@ -90,5 +118,5 @@ epic:
 |cookie登录|✅|
 |i18n支持||
 |消息推送||
-|自动更新||
+|自动更新|✅|
 

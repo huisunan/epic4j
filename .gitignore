@@ -31,7 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
-data/
+/data/
 .local-browser/
-/error/
-/test/
+epic4j.jar.update

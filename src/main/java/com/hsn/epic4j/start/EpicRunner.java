@@ -85,7 +85,9 @@ public class EpicRunner implements ApplicationRunner {
     }
 
     public void doStart() {
-        update.checkForUpdate();
+        if (epicConfig.getAutoUpdate()) {
+            update.checkForUpdate();
+        }
         Browser browser = null;
         try {
             log.info("start work");
@@ -125,7 +127,7 @@ public class EpicRunner implements ApplicationRunner {
                         .map(pages -> pages.get(0))
                         .ifPresent(page -> {
                             try {
-                                FileUrlResource errorDir = new FileUrlResource("error");
+                                FileUrlResource errorDir = new FileUrlResource("data/error");
                                 log.debug("create error dir {}", errorDir.getFile().mkdirs());
                                 ScreenshotOptions options = new ScreenshotOptions();
                                 options.setQuality(100);

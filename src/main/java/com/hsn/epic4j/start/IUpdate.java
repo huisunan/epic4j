@@ -7,6 +7,7 @@ package com.hsn.epic4j.start;
  */
 public interface IUpdate {
     String CONFIG = "update-type";
+    int UPDATE_EXIT_CODE = 66;
 
     void checkForUpdate();
 }
