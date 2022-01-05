@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 function start() {
   cd /opt/epic4j || exit
   if [ -e "epic4j.jar.update" ];then

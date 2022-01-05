@@ -56,7 +56,7 @@ public class MainStart implements IStart {
             String chromeExecutable = System.getenv(env);
             return StrUtil.isNotBlank(chromeExecutable) && FileUtil.assertExecutable(chromeExecutable);
         })) {
-            BrowserFetcher.downloadIfNotExist();
+            BrowserFetcher.downloadIfNotExist(epicConfig.getBrowserVersion());
         }
 
         LaunchOptions options = new LaunchOptionsBuilder()
