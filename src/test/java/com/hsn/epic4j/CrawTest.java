@@ -43,7 +43,7 @@ public class CrawTest {
         page.goTo("http://localhost:9999/");
         FileUrlResource errorDir = new FileUrlResource("data/test");
         File file = errorDir.getFile();
-        file.mkdirs();
+        log.debug("mkdir {}", file.mkdirs());
         ScreenshotOptions screenshotOptions = new ScreenshotOptions();
         screenshotOptions.setQuality(100);
         screenshotOptions.setPath(file.getAbsolutePath() + File.separator + "report.jpg");
