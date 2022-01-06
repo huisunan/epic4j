@@ -1,6 +1,6 @@
 # Epic4j
 
-[Epic4j](https://github.com/huisunan/epic4j)||[EpicGamesClaimer](https://github.com/luminoleon/epicgames-claimer)
+[Epic4j](https://github.com/huisunan/epic4j)|[EpicGamesClaimer](https://github.com/luminoleon/epicgames-claimer)
 
 > 免费领取Epic周免游戏，本项目由EpicGamesClaimer而来
 
