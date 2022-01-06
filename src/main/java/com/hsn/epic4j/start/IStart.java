@@ -11,7 +11,7 @@ public interface IStart {
     /**
      * 获取浏览器
      */
-    Browser getBrowser();
+    Browser getBrowser(String dataPath);
 
     /**
      * 获取默认页面

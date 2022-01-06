@@ -1,6 +1,8 @@
 package com.hsn.epic4j.config;
 
+import com.hsn.epic4j.bean.UserInfo;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,10 +13,11 @@ import java.util.List;
  * 2021/12/27
  * EpicConig
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "epic")
-public class EpicConfig {
+public class EpicConfig extends UserInfo {
     /**
      * webDriver的用户数据
      */
@@ -27,14 +30,6 @@ public class EpicConfig {
      * epic url
      */
     private String epicUrl;
-    /**
-     * 邮箱
-     */
-    private String email;
-    /**
-     * 密码
-     */
-    private String password;
     /**
      * 无头模式
      */
@@ -87,4 +82,12 @@ public class EpicConfig {
      * 自动更新
      */
     private Boolean autoUpdate;
+    /**
+     * 多用户模式
+     */
+    private Boolean multiUser;
+    /**
+     * 多用户配置
+     */
+    private List<UserInfo> users;
 }

@@ -1,6 +1,7 @@
 package com.hsn.epic4j.start;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
@@ -9,6 +10,7 @@ import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.hsn.epic4j.bean.Item;
+import com.hsn.epic4j.bean.UserInfo;
 import com.hsn.epic4j.config.EpicConfig;
 import com.hsn.epic4j.notify.INotify;
 import com.hsn.epic4j.util.PageUtil;
@@ -16,10 +18,9 @@ import com.ruiyun.jvppeteer.core.browser.Browser;
 import com.ruiyun.jvppeteer.core.page.Page;
 import com.ruiyun.jvppeteer.options.ScreenshotOptions;
 import com.ruiyun.jvppeteer.protocol.network.CookieParam;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.FileUrlResource;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -31,11 +32,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 
-@Component
+/**
+ * @author hsn
+ * 2022/1/6
+ * BaseRunner
+ */
 @Slf4j
-public class EpicRunner implements ApplicationRunner {
+@Component
+public abstract class BaseRunner {
     @Autowired
     IStart iStart;
 
@@ -51,48 +56,65 @@ public class EpicRunner implements ApplicationRunner {
     @Autowired
     IUpdate update;
 
-    CountDownLatch lock = new CountDownLatch(1);
-
     ThreadPoolTaskScheduler scheduler;
 
 
-    @Override
-    public void run(ApplicationArguments args) throws InterruptedException {
-        doStart();
-        initCron();
-        lock.await();
-    }
-
     @PreDestroy
     public void free() {
-        lock.countDown();
         if (scheduler != null) {
             scheduler.shutdown();
+        }
+    }
+
+    protected void checkForUpdate() {
+        if (epicConfig.getAutoUpdate()) {
+            update.checkForUpdate();
         }
     }
 
     public void initCron() {
         String cronExpression = epicConfig.getCron();
         if (StrUtil.isBlank(cronExpression)) {
-            DateTime now = DateUtil.date();
+            DateTime now = DateUtil.date().offset(DateField.SECOND, 10);
             cronExpression = StrUtil.format("{} {} {} * * ?", now.second(), now.minute(), now.hour(true));
         }
         log.info("use cron:{}", cronExpression);
         scheduler = new ThreadPoolTaskScheduler();
         scheduler.initialize();
         String finalCronExpression = cronExpression;
-        scheduler.schedule(this::doStart, context -> new CronTrigger(finalCronExpression).nextExecutionTime(context));
+        scheduler.schedule(this::start, context -> new CronTrigger(finalCronExpression).nextExecutionTime(context));
     }
 
-    public void doStart() {
-        if (epicConfig.getAutoUpdate()) {
-            update.checkForUpdate();
+    /**
+     * 获取用户信息
+     */
+    protected abstract List<UserInfo> getUserInfo();
+
+    /**
+     * 默认的启动流程
+     */
+    @SneakyThrows
+    protected void baseStart() {
+        initCron();
+    }
+
+    protected void start() {
+        checkForUpdate();
+        List<UserInfo> userInfo = getUserInfo();
+        for (UserInfo info : userInfo) {
+            doStart(info.getEmail(), info.getPassword());
         }
+    }
+
+    public void doStart(String email, String password) {
+
         Browser browser = null;
         try {
-            log.info("start work");
+            log.info("start {} work", email);
+            //用户文件路径
+            String userDataPath = new FileUrlResource(epicConfig.getDataPath() + File.separator + email).getFile().getAbsolutePath();
             //获取浏览器对象
-            browser = iStart.getBrowser();
+            browser = iStart.getBrowser(userDataPath);
             //获取默认page
             Page page = iStart.getDefaultPage(browser);
             //加载cookie
@@ -110,7 +132,7 @@ public class EpicRunner implements ApplicationRunner {
             boolean needLogin = iStart.needLogin(browser);
             log.debug("needLogin:{}", needLogin);
             if (needLogin) {
-                iLogin.login(page);
+                iLogin.login(page, email, password);
             }
             //领取游戏
             List<Item> receive = iStart.receive(page);
@@ -146,5 +168,4 @@ public class EpicRunner implements ApplicationRunner {
             }
         }
     }
-
 }

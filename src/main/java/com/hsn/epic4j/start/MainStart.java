@@ -22,7 +22,6 @@ import com.ruiyun.jvppeteer.util.FileUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileUrlResource;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -45,8 +44,7 @@ public class MainStart implements IStart {
 
     @Override
     @SneakyThrows
-    public Browser getBrowser() {
-        String dataPath = new FileUrlResource(epicConfig.getDataPath()).getFile().getAbsolutePath();
+    public Browser getBrowser(String dataPath) {
         log.debug("driver data path :{}", dataPath);
         if (epicConfig.getNoSandbox()) {
             epicConfig.getDriverArgs().add("--no-sandbox");
