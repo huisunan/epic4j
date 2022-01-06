@@ -13,6 +13,8 @@ epic:
   # 更新类型
   update-type: maven
   auto-update: ${AUTO_UPDATE:false}
+  multi-user: false
+
 logging:
   level:
     com.hsn.epic4j: ${LOG_LEVEL:info}

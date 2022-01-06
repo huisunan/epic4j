@@ -60,6 +60,21 @@ epic:
 docker run -d -v ~/epic4j:/opt/epic4j/config --name myepic huisunan/epic4j:latest
 ```
 
+#### 多用户配置
+
+以上为单用户配置,还支持多用户配置
+
+```yaml
+epic:
+  # 开启多用户支持
+  multi-user: true
+  users:
+    - email: demo1
+      password: pass1
+    - email: demo2
+      password: pass2
+```
+
 ## 配置
 
 ### yaml
@@ -98,6 +113,10 @@ epic:
   cookie-path:
   # 自动更新默认为false,true开启
   auto-update: false
+  # 开启多用户 默认为false
+  multi-user: false
+  # 多用户信息
+  users:
 ```
 
 ### 环境变量
@@ -120,4 +139,5 @@ epic:
 |i18n支持||
 |消息推送||
 |自动更新|✅|
+|多账号批量处理|✅|
 

@@ -20,21 +20,21 @@ public class PasswordLogin implements ILogin {
 
     @Override
     @SneakyThrows
-    public void login(Page page) {
+    public void login(Page page, String email, String password) {
 
-        if (StrUtil.isEmpty(epicConfig.getEmail())) {
+        if (StrUtil.isEmpty(email)) {
             throw new CheckException("账号不能为空");
         }
-        if (StrUtil.isEmpty(epicConfig.getPassword())) {
-            throw new CheckException("密码不能为空");
+        if (StrUtil.isEmpty(password)) {
+            throw new CheckException(email + " 密码不能为空");
         }
         log.debug("login start");
 
         PageUtil.click(page, "div.menu-icon");
         PageUtil.click(page, "div.mobile-buttons a[href='/login']");
         PageUtil.click(page, "#login-with-epic");
-        PageUtil.type(page, "#email", epicConfig.getEmail());
-        PageUtil.type(page, "#password", epicConfig.getPassword());
+        PageUtil.type(page, "#email", email);
+        PageUtil.type(page, "#password", password);
         PageUtil.click(page, "#sign-in[tabindex='0']");
 //        page.waitForSelector("#rememberMe").click();
         Integer result = PageUtil.findSelectors(page, 30000, true, "#talon_frame_login_prod[style*=visible]", "div.MuiPaper-root[role=alert] h6[class*=subtitle1]", "input[name=code-input-0]", "#user");
