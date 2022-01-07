@@ -14,6 +14,7 @@ import com.ruiyun.jvppeteer.core.Constant;
 import com.ruiyun.jvppeteer.core.Puppeteer;
 import com.ruiyun.jvppeteer.core.browser.Browser;
 import com.ruiyun.jvppeteer.core.browser.BrowserFetcher;
+import com.ruiyun.jvppeteer.core.page.ElementHandle;
 import com.ruiyun.jvppeteer.core.page.Page;
 import com.ruiyun.jvppeteer.options.LaunchOptions;
 import com.ruiyun.jvppeteer.options.LaunchOptionsBuilder;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -116,7 +118,10 @@ public class MainStart implements IStart {
             String purchaseUrl = PageUtil.getStrProperty(page, "#webPurchaseContainer iframe", "src");
             log.debug("purchase url :{}", purchaseUrl);
             page.goTo(purchaseUrl);
-            page.waitForSelector("#purchase-app button[class*=confirm]:not([disabled])").click();
+            //TODO 下单异常
+            ElementHandle elementHandle = page.waitForSelector("#purchase-app button[class*=confirm]:not([disabled])");
+            TimeUnit.SECONDS.sleep(2);
+            elementHandle.click();
             PageUtil.tryClick(page, "#purchaseAppContainer div.payment-overlay button.payment-btn--primary", purchaseUrl);
             receiveItem.add(item);
         }
