@@ -1,5 +1,6 @@
 package com.hsn.epic4j.start;
 
+import com.hsn.epic4j.aop.Retry;
 import com.hsn.epic4j.bean.Item;
 import com.ruiyun.jvppeteer.core.browser.Browser;
 import com.ruiyun.jvppeteer.core.page.Page;
@@ -25,5 +26,8 @@ public interface IStart {
     /**
      * 领取游戏
      */
-    List<Item> receive(Page page);
+    List<Item> receive(Page page, List<Item> weekFreeItems);
+
+    @Retry(message = "获取周末游戏失败")
+    List<Item> getWeekFreeItems(Page page);
 }

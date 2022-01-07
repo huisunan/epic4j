@@ -91,8 +91,7 @@ public class MainStart implements IStart {
     @Override
     @SneakyThrows
     @Retry(message = "领取失败")
-    public List<Item> receive(Page page) {
-        List<Item> weekFreeItems = getWeekFreeItems(page);
+    public List<Item> receive(Page page, List<Item> weekFreeItems) {
         if (log.isDebugEnabled()) {
             log.debug("all free items:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));
         }
@@ -118,6 +117,7 @@ public class MainStart implements IStart {
             log.debug("purchase url :{}", purchaseUrl);
             page.goTo(purchaseUrl);
             page.waitForSelector("#purchase-app button[class*=confirm]:not([disabled])").click();
+            PageUtil.tryClick(page, "#purchaseAppContainer div.payment-overlay button.payment-btn--primary", purchaseUrl);
             receiveItem.add(item);
         }
         if (receiveItem.isEmpty()) {
@@ -130,7 +130,8 @@ public class MainStart implements IStart {
      * 获取周免游戏
      */
     @Retry(message = "获取周末游戏失败")
-    private List<Item> getWeekFreeItems(Page page) {
+    @Override
+    public List<Item> getWeekFreeItems(Page page) {
         Browser browser = page.browser();
         String userCountry = "CN";
         String locate = "zh-CN";

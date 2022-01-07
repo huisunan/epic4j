@@ -90,4 +90,8 @@ public class EpicConfig extends UserInfo {
      * 多用户配置
      */
     private List<UserInfo> users;
+    /**
+     * 错误输出截图
+     */
+    private Boolean errorScreenShoot = true;
 }

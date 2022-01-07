@@ -75,7 +75,7 @@ public abstract class BaseRunner {
     public void initCron() {
         String cronExpression = epicConfig.getCron();
         if (StrUtil.isBlank(cronExpression)) {
-            DateTime now = DateUtil.date().offset(DateField.SECOND, 10);
+            DateTime now = DateUtil.date().offset(DateField.SECOND, 3);
             cronExpression = StrUtil.format("{} {} {} * * ?", now.second(), now.minute(), now.hour(true));
         }
         log.info("use cron:{}", cronExpression);
@@ -134,15 +134,16 @@ public abstract class BaseRunner {
             if (needLogin) {
                 iLogin.login(page, email, password);
             }
+            List<Item> weekFreeItems = iStart.getWeekFreeItems(page);
             //领取游戏
-            List<Item> receive = iStart.receive(page);
+            List<Item> receive = iStart.receive(page, weekFreeItems);
             for (INotify notify : notifies) {
                 if (notify.notifyReceive(receive)) {
                     break;
                 }
             }
         } catch (Exception e) {
-            if (log.isDebugEnabled()) {
+            if (epicConfig.getErrorScreenShoot()) {
                 Optional.ofNullable(browser)
                         .map(Browser::pages)
                         .filter(CollUtil::isNotEmpty)
