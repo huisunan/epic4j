@@ -142,7 +142,7 @@ public class MainStart implements IStart {
                 case 1:
                     throw new PermissionException("CAPTCHA is required for unknown reasons when claiming");
                 case 2:
-                    page.goTo(purchaseUrl);
+                    page.goTo(itemUrl);
                     PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
                     if (!isInLibrary(page)) {
                         throw new ItemException("An item was mistakenly considered to have been claimed");
