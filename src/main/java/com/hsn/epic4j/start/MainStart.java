@@ -118,11 +118,12 @@ public class MainStart implements IStart {
             String purchaseUrl = PageUtil.getStrProperty(page, "#webPurchaseContainer iframe", "src");
             log.debug("purchase url :{}", purchaseUrl);
             page.goTo(purchaseUrl);
-            //TODO 下单异常
             ElementHandle elementHandle = page.waitForSelector("#purchase-app button[class*=confirm]:not([disabled])");
-            TimeUnit.SECONDS.sleep(2);
+            TimeUnit.SECONDS.sleep(3);
             elementHandle.click();
             PageUtil.tryClick(page, "#purchaseAppContainer div.payment-overlay button.payment-btn--primary", purchaseUrl);
+            TimeUnit.SECONDS.sleep(10);
+            //TODO 领取后的校验
             receiveItem.add(item);
         }
         if (receiveItem.isEmpty()) {
