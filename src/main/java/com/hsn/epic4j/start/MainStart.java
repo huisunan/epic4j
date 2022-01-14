@@ -115,6 +115,7 @@ public class MainStart implements IStart {
             PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
             if (isInLibrary(page)) {
                 log.debug("{} had in library", item.getTitle());
+                continue;
             }
             page.waitForSelector("div[data-component=WithClickTracking] button").click();
             //epic user licence check
@@ -141,6 +142,7 @@ public class MainStart implements IStart {
                 case 1:
                     throw new PermissionException("CAPTCHA is required for unknown reasons when claiming");
                 case 2:
+                    page.goTo(purchaseUrl);
                     PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
                     if (!isInLibrary(page)) {
                         throw new ItemException("An item was mistakenly considered to have been claimed");
