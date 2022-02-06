@@ -30,6 +30,7 @@ public class CrawTest {
     @Test
     @SneakyThrows
     public void test() {
+
         BrowserFetcher.downloadIfNotExist("938248");
         String dataPath = new FileUrlResource("./data/chrome/tests").getFile().getAbsolutePath();
         LaunchOptions options = new LaunchOptionsBuilder()
