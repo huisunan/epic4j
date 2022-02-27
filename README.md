@@ -117,6 +117,8 @@ epic:
   multi-user: false
   # 多用户信息
   users:
+  # 错误时截图,默认为false
+  error-screen-shoot: false
 ```
 
 ### 环境变量
@@ -127,7 +129,7 @@ epic:
 | ---- | ---- | ----- |
 |EMAIL|邮箱地址||
 |PASSWORD|密码||
-|LOG_LEVEL|日志级别|日志级别为debug可以看到更多的日志,并且在有异常抛出时会截图到error/目录下|
+|LOG_LEVEL|日志级别|日志级别为debug可以看到更多的日志|
 |COOKIE_PATH|cookie路径|cookie不为空则加载,docker下通过挂载目录的方式,加载cookie路径|
 |CRON|cron表达式|定时任务([表达式验证](https://www.bejson.com/othertools/cronvalidate/))|
 

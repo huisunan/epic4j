@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 
 /**
+ * 通过阿里云的maven仓库更新,有一定的延迟
+ *
  * @author hsn
  * 2022/1/4
  * MavenUpdate

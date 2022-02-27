@@ -8,7 +8,11 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.hsn.epic4j.aop.Retry;
 import com.hsn.epic4j.bean.Item;
+import com.hsn.epic4j.bean.SelectItem;
 import com.hsn.epic4j.config.EpicConfig;
+import com.hsn.epic4j.exception.ItemException;
+import com.hsn.epic4j.exception.PermissionException;
+import com.hsn.epic4j.exception.TimeException;
 import com.hsn.epic4j.util.PageUtil;
 import com.ruiyun.jvppeteer.core.Constant;
 import com.ruiyun.jvppeteer.core.Puppeteer;
@@ -88,11 +92,16 @@ public class MainStart implements IStart {
     }
 
 
+    private Boolean isInLibrary(Page page) {
+        String textContent = PageUtil.getTextContent(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]");
+        return "In Library".equals(textContent);
+    }
+
+
     @Override
     @SneakyThrows
     @Retry(message = "领取失败")
-    public List<Item> receive(Page page) {
-        List<Item> weekFreeItems = getWeekFreeItems(page);
+    public List<Item> receive(Page page, List<Item> weekFreeItems) {
         if (log.isDebugEnabled()) {
             log.debug("all free items:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));
         }
@@ -103,10 +112,9 @@ public class MainStart implements IStart {
             page.goTo(itemUrl);
             //age limit
             PageUtil.tryClick(page, "div[data-component=PDPAgeGate] Button", itemUrl, 8, 1000);
-            String textContent = PageUtil.getStrProperty(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "textContent");
-            if ("In Library".equals(textContent)) {
-                log.debug("{} had receive", item.getTitle());
-                continue;
+            PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
+            if (isInLibrary(page)) {
+                log.debug("{} had in library", item.getTitle());
             }
             page.waitForSelector("div[data-component=WithClickTracking] button").click();
             //epic user licence check
@@ -117,8 +125,28 @@ public class MainStart implements IStart {
             String purchaseUrl = PageUtil.getStrProperty(page, "#webPurchaseContainer iframe", "src");
             log.debug("purchase url :{}", purchaseUrl);
             page.goTo(purchaseUrl);
-            page.waitForSelector("#purchase-app button[class*=confirm]:not([disabled])").click();
-            receiveItem.add(item);
+            PageUtil.tryClick(page, "#purchase-app button[class*=confirm]:not([disabled])", page.mainFrame().url(), 20, 500);
+            PageUtil.tryClick(page, "#purchaseAppContainer div.payment-overlay button.payment-btn--primary", page.mainFrame().url());
+            Integer res = PageUtil.findSelectors(page, 10_000, true,
+                    new SelectItem("#purchase-app div[class*=alert]"),
+                    new SelectItem("#talon_frame_checkout_free_prod[style*=visible]"),
+                    new SelectItem("#purchase-app > div", false)
+            );
+            switch (res) {
+                case -1:
+                    throw new TimeException("time out");
+                case 0:
+                    String message = PageUtil.getStrProperty(page, "#purchase-app div[class*=alert]:not([disabled])", "textContent");
+                    throw new PermissionException(message);
+                case 1:
+                    throw new PermissionException("CAPTCHA is required for unknown reasons when claiming");
+                case 2:
+                    PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
+                    if (!isInLibrary(page)) {
+                        throw new ItemException("An item was mistakenly considered to have been claimed");
+                    }
+                    receiveItem.add(item);
+            }
         }
         if (receiveItem.isEmpty()) {
             log.info("all free week games in your library:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));
@@ -130,7 +158,8 @@ public class MainStart implements IStart {
      * 获取周免游戏
      */
     @Retry(message = "获取周末游戏失败")
-    private List<Item> getWeekFreeItems(Page page) {
+    @Override
+    public List<Item> getWeekFreeItems(Page page) {
         Browser browser = page.browser();
         String userCountry = "CN";
         String locate = "zh-CN";

@@ -3,6 +3,8 @@ package com.hsn.epic4j.util;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.hsn.epic4j.bean.SelectItem;
+import com.hsn.epic4j.exception.TimeException;
 import com.ruiyun.jvppeteer.core.browser.Browser;
 import com.ruiyun.jvppeteer.core.page.ElementHandle;
 import com.ruiyun.jvppeteer.core.page.Page;
@@ -13,6 +15,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -34,14 +37,15 @@ public class PageUtil {
     }
 
     @SneakyThrows
-    public Integer findSelectors(Page page, Integer timeout, Boolean ignore, String... selectors) {
+    public Integer findSelectors(Page page, Integer timeout, Boolean ignore, SelectItem... selectItems) {
         WaitForSelectorOptions options = new WaitForSelectorOptions();
         options.setTimeout(timeout);
         int interval = 100;//100ms
         for (int i = 0; i < timeout; i += interval) {
-            for (int j = 0; j < selectors.length; j++) {
+            for (int j = 0; j < selectItems.length; j++) {
                 try {
-                    if (page.$(selectors[j]) != null) {
+                    SelectItem selectItem = selectItems[j];
+                    if ((page.$(selectItem.getSelectors()) != null) == selectItem.isExist()) {
                         return j;
                     }
                 } catch (Exception e) {
@@ -59,8 +63,45 @@ public class PageUtil {
     }
 
     @SneakyThrows
+    public Integer findSelectors(Page page, Integer timeout, Boolean ignore, String... selectors) {
+        return findSelectors(page, timeout, ignore,
+                Arrays.stream(selectors).map(SelectItem::new).toArray(SelectItem[]::new)
+        );
+    }
+
+
+    public Boolean waitForTextChange(Page page, String selector, String text) {
+        return waitForTextChange(page, selector, text, 3_000, 100);
+    }
+
+    @SneakyThrows
+    public Boolean waitForTextChange(Page page, String selector, String text, Integer timeout, Integer interval) {
+        for (int i = 0; i < timeout; i += interval) {
+            ElementHandle elementHandle = page.$(selector);
+            if (elementHandle != null) {
+                String textContent = getElementStrProperty(elementHandle, "textContent");
+                if (!text.equals(textContent)) {
+                    return true;
+                }
+            }
+            TimeUnit.MILLISECONDS.sleep(interval);
+        }
+        throw new TimeException("wait text change timeout :" + text);
+
+    }
+
+
+    public String getElementStrProperty(ElementHandle elementHandle, String property) {
+        return (String) elementHandle.getProperty(property).jsonValue();
+    }
+
+    public String getTextContent(Page page, String selector) {
+        return getStrProperty(page, selector, "textContent");
+    }
+
+    @SneakyThrows
     public String getStrProperty(Page page, String selector, String property) {
-        return (String) page.waitForSelector(selector).getProperty(property).jsonValue();
+        return getElementStrProperty(page.waitForSelector(selector), property);
     }
 
     public void click(Page page, String selector) {

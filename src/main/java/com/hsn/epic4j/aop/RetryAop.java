@@ -30,7 +30,7 @@ public class RetryAop {
                 return joinPoint.proceed();
             } catch (Throwable throwable) {
                 if (i == (retryCount - 1)) {
-                    log.error(annotation.message());
+                    log.error(annotation.message(), throwable);
                     throw throwable;
                 }
                 log.debug("message:{}, {} retry count :{}", annotation.message(), method.getName(), i);
