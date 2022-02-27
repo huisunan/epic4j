@@ -107,7 +107,7 @@ public class MainStart implements IStart {
         }
         List<Item> receiveItem = new ArrayList<>();
         for (Item item : weekFreeItems) {
-            String itemUrl = StrUtil.format(epicConfig.getStoreUrl(), item.getUrlSlug());
+            String itemUrl = StrUtil.format(epicConfig.getStoreUrl(), item.getProductSlug());
             log.debug("item url:{}", itemUrl);
             page.goTo(itemUrl);
             //age limit

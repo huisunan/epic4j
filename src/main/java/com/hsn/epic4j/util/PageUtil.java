@@ -31,7 +31,9 @@ public class PageUtil {
     public JSONObject getJson(String url, Browser browser) {
         Page page = browser.newPage();
         Response response = page.goTo(url);
-        JSONObject jsonObject = JSONUtil.parseObj(response.text());
+        String text = response.text();
+        log.trace("get {} json value : {}", url, text);
+        JSONObject jsonObject = JSONUtil.parseObj(text);
         page.close();
         return jsonObject;
     }
@@ -78,6 +80,7 @@ public class PageUtil {
     public Boolean waitForTextChange(Page page, String selector, String text, Integer timeout, Integer interval) {
         for (int i = 0; i < timeout; i += interval) {
             ElementHandle elementHandle = page.$(selector);
+            log.trace("wait {} text change count {}", selector, i);
             if (elementHandle != null) {
                 String textContent = getElementStrProperty(elementHandle, "textContent");
                 if (!text.equals(textContent)) {
@@ -128,6 +131,7 @@ public class PageUtil {
         for (int i = 0; i < retry; i++) {
             if (page.mainFrame().url().equals(original)) {
                 try {
+                    log.trace("try click {} count:{}", selector, i);
                     page.click(selector);
                     return;
                 } catch (Exception ignore) {
