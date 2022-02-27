@@ -17,6 +17,7 @@ import org.springframework.core.io.FileUrlResource;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author hsn
@@ -29,18 +30,22 @@ public class CrawTest {
     @Test
     @SneakyThrows
     public void test() {
+
         BrowserFetcher.downloadIfNotExist("938248");
-        String dataPath = new FileUrlResource("./data/chrome").getFile().getAbsolutePath();
+        String dataPath = new FileUrlResource("./data/chrome/tests").getFile().getAbsolutePath();
         LaunchOptions options = new LaunchOptionsBuilder()
                 .withArgs(Arrays.asList("--blink-settings=imagesEnabled=false", "--no-first-run", "--disable-gpu", "--no-default-browser-check", "--no-sandbox"))
-                .withHeadless(true)
+                .withHeadless(false)
                 .withUserDataDir(dataPath)
+                .withExecutablePath("")
                 .withIgnoreDefaultArgs(Collections.singletonList("--enable-automation"))
                 .build();
         Browser browser = Puppeteer.launch(options);
         Page page = browser.pages().get(0);
-        PageUtil.crawSet(page);
-        page.goTo("http://localhost:9999/");
+//        PageUtil.crawSet(page);
+//        page.goTo("http://localhost:9999/");
+        page.goTo("http://www.baidu.com/");
+        TimeUnit.SECONDS.sleep(10);
         FileUrlResource errorDir = new FileUrlResource("data/test");
         File file = errorDir.getFile();
         log.debug("mkdir {}", file.mkdirs());

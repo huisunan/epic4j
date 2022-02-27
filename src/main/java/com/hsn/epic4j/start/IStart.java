@@ -1,10 +1,8 @@
 package com.hsn.epic4j.start;
 
-import com.hsn.epic4j.aop.Retry;
 import com.hsn.epic4j.bean.Item;
 import com.ruiyun.jvppeteer.core.browser.Browser;
 import com.ruiyun.jvppeteer.core.page.Page;
-import lombok.SneakyThrows;
 
 import java.util.List;
 
@@ -19,8 +17,6 @@ public interface IStart {
      */
     Page getDefaultPage(Browser browser);
 
-
-    @SneakyThrows
     boolean needLogin(Browser browser);
 
     /**
@@ -28,6 +24,5 @@ public interface IStart {
      */
     List<Item> receive(Page page, List<Item> weekFreeItems);
 
-    @Retry(message = "获取周末游戏失败")
     List<Item> getWeekFreeItems(Page page);
 }

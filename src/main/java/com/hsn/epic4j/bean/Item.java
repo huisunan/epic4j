@@ -11,4 +11,5 @@ public class Item {
     private String namespace;
     private String offerType;
     private String productSlug;
+    private String urlSlug;
 }
