@@ -33,6 +33,7 @@ public class RetryAop {
                     log.error(annotation.message(), throwable);
                     throw throwable;
                 }
+                log.debug("retry message:{}", throwable.getMessage());
                 log.debug("message:{}, {} retry count :{}", annotation.message(), method.getName(), i);
             }
         }

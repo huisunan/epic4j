@@ -107,7 +107,14 @@ public class MainStart implements IStart {
         }
         List<Item> receiveItem = new ArrayList<>();
         for (Item item : weekFreeItems) {
-            String itemUrl = StrUtil.format(epicConfig.getStoreUrl(), item.getProductSlug());
+            String url = "";
+            if (Item.BASE_GAME.equals(item.getOfferType())) {
+                url = item.getProductSlug();
+            } else if (Item.DLC.equals(item.getOfferType())) {
+                url = item.getUrlSlug();
+
+            }
+            String itemUrl = StrUtil.format(epicConfig.getStoreUrl(), url);
             log.debug("item url:{}", itemUrl);
             page.goTo(itemUrl);
             //age limit
@@ -128,27 +135,34 @@ public class MainStart implements IStart {
             page.goTo(purchaseUrl);
             PageUtil.tryClick(page, "#purchase-app button[class*=confirm]:not([disabled])", page.mainFrame().url(), 20, 500);
             PageUtil.tryClick(page, "#purchaseAppContainer div.payment-overlay button.payment-btn--primary", page.mainFrame().url());
-            Integer res = PageUtil.findSelectors(page, 10_000, true,
-                    new SelectItem("#purchase-app div[class*=alert]"),
-                    new SelectItem("#talon_frame_checkout_free_prod[style*=visible]"),
-                    new SelectItem("#purchase-app > div", false)
+            PageUtil.findSelectors(page, 10_000, true,
+                    () -> {
+                        throw new TimeException("time out");
+                    },
+                    new SelectItem("#purchase-app div[class*=alert]", () -> {
+                        if (item.isDLC()) {
+                            //DLC情况下,在没有本体的情况下也也可以领取
+                            return SelectItem.SelectCallBack.CONTINUE;
+                        } else {
+                            String message = PageUtil.getStrProperty(page, "#purchase-app div[class*=alert]:not([disabled])", "textContent");
+                            throw new PermissionException(message);
+                        }
+                    }),
+                    new SelectItem("#talon_frame_checkout_free_prod[style*=visible]", () -> {
+                        //需要验证码
+                        throw new PermissionException("CAPTCHA is required for unknown reasons when claiming");
+                    }),
+                    new SelectItem("#purchase-app > div", false, () -> {
+                        //当订单完成刷新时，该元素不存在，是订单完成后刷新到新页面
+                        page.goTo(itemUrl);
+                        PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
+                        if (!isInLibrary(page)) {
+                            throw new ItemException("An item was mistakenly considered to have been claimed");
+                        }
+                        receiveItem.add(item);
+                        return SelectItem.SelectCallBack.END;
+                    })
             );
-            switch (res) {
-                case -1:
-                    throw new TimeException("time out");
-                case 0:
-                    String message = PageUtil.getStrProperty(page, "#purchase-app div[class*=alert]:not([disabled])", "textContent");
-                    throw new PermissionException(message);
-                case 1:
-                    throw new PermissionException("CAPTCHA is required for unknown reasons when claiming");
-                case 2:
-                    page.goTo(itemUrl);
-                    PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
-                    if (!isInLibrary(page)) {
-                        throw new ItemException("An item was mistakenly considered to have been claimed");
-                    }
-                    receiveItem.add(item);
-            }
         }
         if (receiveItem.isEmpty()) {
             log.info("all free week games in your library:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));

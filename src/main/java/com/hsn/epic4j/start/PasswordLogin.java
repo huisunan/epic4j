@@ -1,6 +1,7 @@
 package com.hsn.epic4j.start;
 
 import cn.hutool.core.util.StrUtil;
+import com.hsn.epic4j.bean.SelectItem;
 import com.hsn.epic4j.config.EpicConfig;
 import com.hsn.epic4j.exception.CheckException;
 import com.hsn.epic4j.exception.PermissionException;
@@ -36,23 +37,26 @@ public class PasswordLogin implements ILogin {
         PageUtil.type(page, "#email", email);
         PageUtil.type(page, "#password", password);
         PageUtil.click(page, "#sign-in[tabindex='0']");
-//        page.waitForSelector("#rememberMe").click();
-        Integer result = PageUtil.findSelectors(page, 30000, true, "#talon_frame_login_prod[style*=visible]", "div.MuiPaper-root[role=alert] h6[class*=subtitle1]", "input[name=code-input-0]", "#user");
+        PageUtil.findSelectors(page, 30000, true,
+                () -> {
+                    throw new TimeException("Check login result timeout.");
+                },
+                new SelectItem("#talon_frame_login_prod[style*=visible]", () -> {
+                    throw new PermissionException("CAPTCHA is required for unknown reasons when logging in");
+                }),
+                new SelectItem("div.MuiPaper-root[role=alert] h6[class*=subtitle1]", () -> {
+                    Object jsonValue = page.waitForSelector("div.MuiPaper-root[role=alert] h6[class*=subtitle1]").getProperty("textContent").jsonValue();
+                    throw new PermissionException("From Epic Games: " + jsonValue);
+                }),
+                new SelectItem("input[name=code-input-0]", () -> {
+                    throw new PermissionException("From Epic Games need code");
+                }),
+                new SelectItem(".signed-in", () -> {
+                    log.info("login success");
+                    return SelectItem.SelectCallBack.END;
+                })
+        );
 
-        switch (result) {
-            case -1:
-                throw new TimeException("Check login result timeout.");
-            case 0:
-                throw new PermissionException("CAPTCHA is required for unknown reasons when logging in");
-            case 1: {
-                Object jsonValue = page.waitForSelector("div.MuiPaper-root[role=alert] h6[class*=subtitle1]")
-                        .getProperty("textContent").jsonValue();
-                throw new PermissionException("From Epic Games: " + jsonValue);
-            }
-            case 2: {
-                throw new PermissionException("From Epic Games need code");
-            }
-        }
         log.debug("login end");
     }
 }

@@ -18,5 +18,7 @@ epic:
 logging:
   level:
     com.hsn.epic4j: ${LOG_LEVEL:info}
-
+spring:
+  messages:
+    basename: i18n/message
 

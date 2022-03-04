@@ -15,6 +15,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.security.auth.callback.Callback;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -38,37 +39,44 @@ public class PageUtil {
         return jsonObject;
     }
 
+
+    /**
+     * 在指定范围时间内，遍历查找
+     *
+     * @param page        page
+     * @param timeout     超时时间
+     * @param ignore      true忽略异常
+     * @param timeoutBack 超时后回调
+     * @param selectItems 要查询的元素
+     */
     @SneakyThrows
-    public Integer findSelectors(Page page, Integer timeout, Boolean ignore, SelectItem... selectItems) {
+    public void findSelectors(Page page, Integer timeout, Boolean ignore, SelectItem.SelectCallBack timeoutBack, SelectItem... selectItems) {
         WaitForSelectorOptions options = new WaitForSelectorOptions();
         options.setTimeout(timeout);
         int interval = 100;//100ms
         for (int i = 0; i < timeout; i += interval) {
-            for (int j = 0; j < selectItems.length; j++) {
+            for (SelectItem selectItem : selectItems) {
+                boolean flag = false;
                 try {
-                    SelectItem selectItem = selectItems[j];
-                    if ((page.$(selectItem.getSelectors()) != null) == selectItem.isExist()) {
-                        return j;
-                    }
+                    flag = (page.$(selectItem.getSelectors()) != null) == selectItem.isExist();
                 } catch (Exception e) {
-                    if (ignore) {
+                    if (ignore)
                         log.debug("ignore exception", e);
-                    } else {
+                    else
                         throw e;
+                }
+                if (flag) {
+                    boolean c = selectItem.getCallback().run();
+                    if (!c) {
+                        return;
                     }
                 }
-
             }
             TimeUnit.MILLISECONDS.sleep(interval);
         }
-        return -1;
-    }
-
-    @SneakyThrows
-    public Integer findSelectors(Page page, Integer timeout, Boolean ignore, String... selectors) {
-        return findSelectors(page, timeout, ignore,
-                Arrays.stream(selectors).map(SelectItem::new).toArray(SelectItem[]::new)
-        );
+        if (timeoutBack != null) {
+            timeoutBack.run();
+        }
     }
 
 
