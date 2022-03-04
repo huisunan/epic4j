@@ -152,7 +152,7 @@ public class MainStart implements IStart {
                         //需要验证码
                         throw new PermissionException("CAPTCHA is required for unknown reasons when claiming");
                     }),
-                    new SelectItem("#purchase-app > div", false, () -> {
+                    new SelectItem("#purchase-app > div", (p, i) -> p.$(i.getSelectors()) == null, () -> {
                         //当订单完成刷新时，该元素不存在，是订单完成后刷新到新页面
                         page.goTo(itemUrl);
                         PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");

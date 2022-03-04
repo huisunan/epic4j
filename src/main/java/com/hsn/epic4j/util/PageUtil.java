@@ -58,7 +58,7 @@ public class PageUtil {
             for (SelectItem selectItem : selectItems) {
                 boolean flag = false;
                 try {
-                    flag = (page.$(selectItem.getSelectors()) != null) == selectItem.isExist();
+                    flag = selectItem.getPagePredicate().test(page, selectItem);
                 } catch (Exception e) {
                     if (ignore)
                         log.debug("ignore exception", e);
@@ -66,8 +66,8 @@ public class PageUtil {
                         throw e;
                 }
                 if (flag) {
-                    boolean c = selectItem.getCallback().run();
-                    if (!c) {
+                    boolean isContinue = selectItem.getCallback().run();
+                    if (!isContinue) {
                         return;
                     }
                 }
