@@ -17,7 +17,7 @@ public interface IStart {
      */
     Page getDefaultPage(Browser browser);
 
-    boolean needLogin(Browser browser);
+    boolean needLogin(Page page);
 
     /**
      * 领取游戏

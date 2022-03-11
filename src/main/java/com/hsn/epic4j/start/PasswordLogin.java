@@ -30,9 +30,10 @@ public class PasswordLogin implements ILogin {
             throw new CheckException(email + " 密码不能为空");
         }
         log.debug("login start");
-
+        String originUrl = page.mainFrame().url();
         PageUtil.click(page, "div.menu-icon");
         PageUtil.click(page, "div.mobile-buttons a[href='/login']");
+        PageUtil.waitUrlChange(page,originUrl);
         PageUtil.click(page, "#login-with-epic");
         PageUtil.type(page, "#email", email);
         PageUtil.type(page, "#password", password);

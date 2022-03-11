@@ -14,15 +14,25 @@ import com.ruiyun.jvppeteer.protocol.PageEvaluateType;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.LambdaUtil;
+import org.apache.logging.log4j.util.Supplier;
 
 import javax.security.auth.callback.Callback;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @UtilityClass
 public class PageUtil {
+
+    //默认时间间隔 100ms
+    private static final int DEFAULT_INTERVAL = 100;
+
+    //默认超时时间 30s
+    private static final int DEFAULT_TIME_OUT = 30 * 1000;
+
     public <T> T getJsonValue(Browser browser, String url, String path, Class<T> tClass) {
         JSONObject json = getJson(url, browser);
         return json.getByPath(path, tClass);
@@ -51,10 +61,7 @@ public class PageUtil {
      */
     @SneakyThrows
     public void findSelectors(Page page, Integer timeout, Boolean ignore, SelectItem.SelectCallBack timeoutBack, SelectItem... selectItems) {
-        WaitForSelectorOptions options = new WaitForSelectorOptions();
-        options.setTimeout(timeout);
-        int interval = 100;//100ms
-        for (int i = 0; i < timeout; i += interval) {
+        timer(timeout, DEFAULT_INTERVAL, i -> {
             for (SelectItem selectItem : selectItems) {
                 boolean flag = false;
                 try {
@@ -66,39 +73,33 @@ public class PageUtil {
                         throw e;
                 }
                 if (flag) {
-                    boolean isContinue = selectItem.getCallback().run();
-                    if (!isContinue) {
-                        return;
-                    }
+                    return selectItem.getCallback().run();
                 }
             }
-            TimeUnit.MILLISECONDS.sleep(interval);
-        }
-        if (timeoutBack != null) {
-            timeoutBack.run();
-        }
+            return false;
+        }, timeoutBack::run);
+
+
     }
 
 
-    public Boolean waitForTextChange(Page page, String selector, String text) {
-        return waitForTextChange(page, selector, text, 3_000, 100);
+    public void waitForTextChange(Page page, String selector, String text) {
+        waitForTextChange(page, selector, text, 3_000, 100);
     }
 
     @SneakyThrows
-    public Boolean waitForTextChange(Page page, String selector, String text, Integer timeout, Integer interval) {
-        for (int i = 0; i < timeout; i += interval) {
+    public void waitForTextChange(Page page, String selector, String text, Integer timeout, Integer interval) {
+        timer(timeout, interval, i -> {
             ElementHandle elementHandle = page.$(selector);
             log.trace("wait {} text change count {}", selector, i);
             if (elementHandle != null) {
                 String textContent = getElementStrProperty(elementHandle, "textContent");
-                if (!text.equals(textContent)) {
-                    return true;
-                }
+                return !text.equals(textContent);
             }
-            TimeUnit.MILLISECONDS.sleep(interval);
-        }
-        throw new TimeException("wait text change timeout :" + text);
-
+            return false;
+        }, () -> {
+            throw new TimeException("wait text change timeout :" + text);
+        });
     }
 
 
@@ -124,10 +125,37 @@ public class PageUtil {
     }
 
     @SneakyThrows
-    public void elementHandle(Page page, String selector, Integer timeout, Integer sleep, EConsumer<ElementHandle> consumer) {
-        ElementHandle elementHandle = page.waitForSelector(selector, SelectorUtil.timeout(ObjectUtil.defaultIfNull(timeout, 30000)));
-        consumer.accept(elementHandle);
-        TimeUnit.MILLISECONDS.sleep(ObjectUtil.defaultIfNull(sleep, 2000));
+    private void timer(Integer timeout, Integer interval, EFunction<Integer, Boolean> function, ERun end) {
+        timeout = ObjectUtil.defaultIfNull(timeout, DEFAULT_TIME_OUT);
+        interval = ObjectUtil.defaultIfNull(interval, DEFAULT_INTERVAL);
+        for (int i = 0; (i * interval) < timeout; i++) {
+            if (function.accept(i)) {
+                return;
+            }
+            TimeUnit.MILLISECONDS.sleep(interval);
+        }
+        end.run();
+
+    }
+
+    @SneakyThrows
+    public void elementHandle(Page page, String selector, Integer timeout, Integer interval, EConsumer<ElementHandle> consumer) {
+        timer(timeout, interval, i -> {
+            log.trace("[{}]wait for selector:{}", i, selector);
+            ElementHandle elementHandle = page.$(selector);
+            if (elementHandle != null) {
+                log.trace("start consumer");
+                consumer.accept(elementHandle);
+                log.trace("end consumer");
+                //点击后延迟2秒等待处理
+                TimeUnit.SECONDS.sleep(2);
+                return true;
+            }
+            return false;
+        }, () -> {
+            throw new TimeoutException("wait for selector " + selector + " time out");
+        });
+
     }
 
     public void tryClick(Page page, String selector, String original) {
@@ -151,8 +179,26 @@ public class PageUtil {
         }
     }
 
+    public void waitUrlChange(Page page, String originUrl) {
+        timer(DEFAULT_TIME_OUT, DEFAULT_INTERVAL, i -> !originUrl.equals(page.mainFrame().url()), () -> {
+            throw new TimeoutException("login url not change");
+        });
+    }
+
     public interface EConsumer<T> {
         void accept(T t) throws Exception;
+    }
+
+    public interface ESupply<T> {
+        T get() throws Exception;
+    }
+
+    public interface EFunction<T, R> {
+        R accept(T t) throws Exception;
+    }
+
+    public interface ERun {
+        void run() throws Exception;
     }
 
     public void crawSet(Page page) {

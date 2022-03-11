@@ -129,7 +129,7 @@ public abstract class BaseRunner {
             PageUtil.crawSet(page);
             //打开epic主页
             page.goTo(epicConfig.getEpicUrl());
-            boolean needLogin = iStart.needLogin(browser);
+            boolean needLogin = iStart.needLogin(page);
             log.debug("needLogin:{}", needLogin);
             if (needLogin) {
                 iLogin.login(page, email, password);

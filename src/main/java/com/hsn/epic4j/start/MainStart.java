@@ -87,8 +87,9 @@ public class MainStart implements IStart {
     @SneakyThrows
     @Override
     @Retry(message = "登录检查失败")
-    public boolean needLogin(Browser browser) {
-        return PageUtil.getJsonValue(browser, epicConfig.getCheckLoginUrl(), "needLogin", Boolean.class);
+    public boolean needLogin(Page page) {
+        return page.$("div.mobile-buttons a[href='/login']") != null;
+//        return PageUtil.getJsonValue(browser, epicConfig.getCheckLoginUrl(), "needLogin", Boolean.class);
     }
 
 

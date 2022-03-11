@@ -27,11 +27,11 @@ public class SelectItem {
 
 
     public interface SelectCallBack {
-        boolean CONTINUE = true;
-        boolean END = false;
+        boolean CONTINUE = false;
+        boolean END = true;
 
         /**
-         * @return 是否继续运行 true继续运行
+         * @return 是否终端运行 true终端
          * @throws RuntimeException     RuntimeException
          * @throws InterruptedException InterruptedException
          */
