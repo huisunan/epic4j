@@ -8,7 +8,11 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.hsn.epic4j.aop.Retry;
 import com.hsn.epic4j.bean.Item;
 import com.hsn.epic4j.bean.UserInfo;
 import com.hsn.epic4j.config.EpicConfig;
@@ -30,8 +34,11 @@ import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
+import java.util.stream.StreamSupport;
 
 /**
  * @author hsn
@@ -101,12 +108,14 @@ public abstract class BaseRunner {
     protected void start() {
         checkForUpdate();
         List<UserInfo> userInfo = getUserInfo();
+        //获取周免游戏
+        List<Item> weekFreeItems = getWeekFreeItems();
         for (UserInfo info : userInfo) {
-            doStart(info.getEmail(), info.getPassword());
+            doStart(info.getEmail(), info.getPassword(), weekFreeItems);
         }
     }
 
-    public void doStart(String email, String password) {
+    public void doStart(String email, String password, List<Item> weekFreeItems) {
 
         Browser browser = null;
         try {
@@ -134,7 +143,6 @@ public abstract class BaseRunner {
             if (needLogin) {
                 iLogin.login(page, email, password);
             }
-            List<Item> weekFreeItems = iStart.getWeekFreeItems(page);
             //领取游戏
             List<Item> receive = iStart.receive(page, weekFreeItems);
             for (INotify notify : notifies) {
@@ -168,5 +176,51 @@ public abstract class BaseRunner {
                 browser.close();
             }
         }
+    }
+
+    /**
+     * 获取免费游戏
+     */
+    @Retry(message = "获取周末游戏失败",value = 5)
+    private List<Item> getWeekFreeItems() {
+        //https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=zh-CN-CN&country=CN&allowCountries=CN
+        String userCountry = "CN";
+        String locate = "zh-CN";
+        String formatUrl = StrUtil.format(epicConfig.getFreeGameUrl(), locate, userCountry, userCountry);
+        log.debug(formatUrl);
+        String res = HttpUtil.get(formatUrl);
+        log.trace("free game json:\n{}", res);
+        JSONObject json = JSONUtil.parseObj(res);
+        List<Item> list = new ArrayList<>();
+        DateTime now = DateUtil.date();
+        for (JSONObject element : json.getByPath("data.Catalog.searchStore.elements", JSONArray.class).jsonIter()) {
+            if (!"ACTIVE".equals(element.getStr("status"))) {
+                continue;
+            }
+            if (StreamSupport.stream(element.getJSONArray("categories").jsonIter().spliterator(), false)
+                    .anyMatch(item -> "freegames".equals(item.getStr("path")))) {
+                JSONObject promotions = element.getJSONObject("promotions");
+                if (promotions == null) {
+                    continue;
+                }
+                JSONArray promotionalOffers = promotions.getJSONArray("promotionalOffers");
+                if (CollUtil.isNotEmpty(promotionalOffers)) {
+                    if (StreamSupport.stream(promotionalOffers.jsonIter().spliterator(), false)
+                            .flatMap(offerItem -> StreamSupport.stream(offerItem.getJSONArray("promotionalOffers").jsonIter().spliterator(), false))
+                            .anyMatch(offerItem -> {
+                                DateTime startDate = DateUtil.parse(offerItem.getStr("startDate")).setTimeZone(TimeZone.getDefault());
+                                DateTime endDate = DateUtil.parse(offerItem.getStr("endDate")).setTimeZone(TimeZone.getDefault());
+                                JSONObject discountSetting = offerItem.getJSONObject("discountSetting");
+                                return DateUtil.isIn(now, startDate, endDate) && "PERCENTAGE".equals(discountSetting.getStr("discountType"))
+                                        && discountSetting.getInt("discountPercentage") == 0;
+                            })) {
+                        list.add(element.toBean(Item.class));
+                    }
+
+                }
+            }
+
+        }
+        return list;
     }
 }

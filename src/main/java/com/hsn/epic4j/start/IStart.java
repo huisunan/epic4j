@@ -24,5 +24,4 @@ public interface IStart {
      */
     List<Item> receive(Page page, List<Item> weekFreeItems);
 
-    List<Item> getWeekFreeItems(Page page);
 }
