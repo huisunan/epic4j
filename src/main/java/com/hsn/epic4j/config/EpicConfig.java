@@ -53,7 +53,7 @@ public class EpicConfig extends UserInfo {
     /**
      * 商店项url
      */
-    private String storeUrl = "https://www.epicgames.com/store/en-US/p/{}";
+    private String storeUrl = "https://store.epicgames.com/en-US/p/{}";
     /**
      * crontab 表达式
      */

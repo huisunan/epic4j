@@ -90,6 +90,12 @@ public abstract class BaseRunner {
         scheduler.initialize();
         String finalCronExpression = cronExpression;
         scheduler.schedule(this::start, context -> new CronTrigger(finalCronExpression).nextExecutionTime(context));
+        //立即执行一次
+        try{
+            start();
+        }catch (Exception ignore){
+            log.error("立即执行出错",ignore);
+        }
     }
 
     /**
@@ -181,7 +187,7 @@ public abstract class BaseRunner {
     /**
      * 获取免费游戏
      */
-    @Retry(message = "获取周末游戏失败",value = 5)
+    @Retry(message = "获取周末游戏失败", value = 5)
     private List<Item> getWeekFreeItems() {
         //https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=zh-CN-CN&country=CN&allowCountries=CN
         String userCountry = "CN";
