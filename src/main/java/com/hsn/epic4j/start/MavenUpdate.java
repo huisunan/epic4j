@@ -2,6 +2,7 @@ package com.hsn.epic4j.start;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.hsn.epic4j.bean.AliMvnDto;
 import com.hsn.epic4j.config.EpicConfig;
@@ -27,24 +28,30 @@ public class MavenUpdate implements IUpdate {
     @Autowired
     EpicConfig epicConfig;
 
+    /**
+     * 有0-4小时的延迟
+     */
     @Override
     public void checkForUpdate() {
-        String aliMvnSearch = "https://developer.aliyun.com/artifact/aliyunMaven/searchArtifactByGav?groupId=io.github.huisunan&artifactId=epic4j&version=&repoId=all&_input_charset=utf-8";
-        String aliDownloadUrl = "https://archiva-maven-storage-prod.oss-cn-beijing.aliyuncs.com/repository/central/io/github/huisunan/epic4j/{}/epic4j-{}.jar";
-        String string = HttpUtil.get(aliMvnSearch);
-        AliMvnDto aliMvnDto = JSONUtil.toBean(string, AliMvnDto.class);
+        String sonatypeSearch = "https://search.maven.org/solrsearch/select?q=g:io.github.huisunan%20AND%20a:epic4j&start=0&rows=20";
+        String downloadUrl = "http://search.maven.org/remotecontent?filepath=io/github/huisunan/epic4j/{}/epic4j-{}.jar";
+        String string = HttpUtil.get(sonatypeSearch);
+        JSONObject jsonObject = JSONUtil.parseObj(string);
+        Integer numFound = (Integer) jsonObject.getByPath("response.numFound");
+        if (numFound < 1) {
+            log.warn("not found jar package");
+            return;
+        }
+        String lastVersion = (String) jsonObject.getByPath("response.docs[0].latestVersion");
+
         VersionCompare compare = new VersionCompare();
-        aliMvnDto.getObject().stream().filter(item -> "jar".equals(item.getPackaging()))
-                .max(((o1, o2) -> compare.compare(o1.getVersion(), o2.getVersion())))
-                .ifPresent(latestDto -> {
-                    if (compare.compare(latestDto.getVersion(), epicConfig.getVersion()) > 0) {
-                        log.debug("need update");
-                        String downloadUrl = StrUtil.format(aliDownloadUrl, latestDto.getVersion(), latestDto.getVersion());
-                        File file = new File("epic4j.jar.update");
-                        HttpUtil.downloadFile(downloadUrl, file);
-                        log.debug("download new version:{}", latestDto.getVersion());
-                        System.exit(UPDATE_EXIT_CODE);
-                    }
-                });
+        if (compare.compare(lastVersion, epicConfig.getVersion()) > 0) {
+            //需要更新
+            String url = StrUtil.format(downloadUrl, lastVersion, lastVersion);
+            File file = new File("epic4j.jar.update");
+            HttpUtil.downloadFile(url, file);
+            log.info("download new version:{}", lastVersion);
+            System.exit(UPDATE_EXIT_CODE);
+        }
     }
 }
