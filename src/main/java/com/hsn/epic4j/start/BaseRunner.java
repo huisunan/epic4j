@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
@@ -91,10 +92,10 @@ public abstract class BaseRunner {
         String finalCronExpression = cronExpression;
         scheduler.schedule(this::start, context -> new CronTrigger(finalCronExpression).nextExecutionTime(context));
         //立即执行一次
-        try{
+        try {
             start();
-        }catch (Exception ignore){
-            log.error("立即执行出错",ignore);
+        } catch (Exception ignore) {
+            log.error("立即执行出错", ignore);
         }
     }
 
@@ -115,7 +116,12 @@ public abstract class BaseRunner {
         checkForUpdate();
         List<UserInfo> userInfo = getUserInfo();
         //获取周免游戏
-        List<Item> weekFreeItems = getWeekFreeItems();
+        List<Item> weekFreeItems = getWeekFreeItems().stream().peek(i -> {
+            if (StrUtil.endWith(i.getProductSlug(), "/home")) {
+                i.setProductSlug(i.getProductSlug().replace("/home", ""));
+            }
+        }).collect(Collectors.toList());
+        //处理 productSlug带/home的清空
         for (UserInfo info : userInfo) {
             doStart(info.getEmail(), info.getPassword(), weekFreeItems);
         }
