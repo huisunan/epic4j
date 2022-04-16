@@ -3,6 +3,8 @@ package com.hsn.epic4j.bean;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class Item {
@@ -17,6 +19,9 @@ public class Item {
     private String offerType;
     private String productSlug;
     private String urlSlug;
+
+    private CatalogNs catalogNs;
+    private List<PageSlug> offerMappings;
 
     public boolean isDLC() {
         return DLC.equals(offerType);

@@ -1,13 +1,10 @@
 package com.hsn.epic4j.start;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
 import com.hsn.epic4j.aop.Retry;
 import com.hsn.epic4j.bean.Item;
+import com.hsn.epic4j.bean.PageSlug;
 import com.hsn.epic4j.bean.SelectItem;
 import com.hsn.epic4j.config.EpicConfig;
 import com.hsn.epic4j.exception.ItemException;
@@ -28,9 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * 主启动类
@@ -99,6 +98,36 @@ public class MainStart implements IStart {
     }
 
 
+    private String getItemUrl(Item item) {
+        String url = null;
+        if (Item.BASE_GAME.equals(item.getOfferType())) {
+            url = item.getProductSlug();
+        } else if (Item.DLC.equals(item.getOfferType())) {
+            url = item.getUrlSlug();
+        }
+        if (url != null) {
+            return url;
+        }
+        //url为空尝试加载 offerMappings
+        if (CollUtil.isNotEmpty(item.getOfferMappings())) {
+            if ((url = findMappingUrl(item.getOfferMappings())) != null) {
+                return url;
+            }
+        }
+        //url为空尝试加载 catalogNs
+        if (item.getCatalogNs() != null && CollUtil.isNotEmpty(item.getCatalogNs().getMappings())) {
+            if ((url = findMappingUrl(item.getCatalogNs().getMappings())) != null) {
+                return url;
+            }
+        }
+        return null;
+    }
+
+    private String findMappingUrl(List<PageSlug> pageSlugs) {
+        return pageSlugs.stream().filter(i -> "productHome".equals(i.getPageType()))
+                .findFirst().map(PageSlug::getPageSlug).orElse(null);
+    }
+
     @Override
     @SneakyThrows
     @Retry(message = "领取失败")
@@ -108,13 +137,7 @@ public class MainStart implements IStart {
         }
         List<Item> receiveItem = new ArrayList<>();
         for (Item item : weekFreeItems) {
-            String url = "";
-            if (Item.BASE_GAME.equals(item.getOfferType())) {
-                url = item.getProductSlug();
-            } else if (Item.DLC.equals(item.getOfferType())) {
-                url = item.getUrlSlug();
-
-            }
+            String url = getItemUrl(item);
             String itemUrl = StrUtil.format(epicConfig.getStoreUrl(), url);
             log.debug("item url:{}", itemUrl);
             page.goTo(itemUrl);
