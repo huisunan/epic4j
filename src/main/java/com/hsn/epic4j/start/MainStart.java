@@ -148,7 +148,8 @@ public class MainStart implements IStart {
                 log.debug("{} had in library", item.getTitle());
                 continue;
             }
-            page.waitForSelector("div[data-component=WithClickTracking] button").click();
+            page.waitForSelector("div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]").click();
+//            page.waitForSelector("div[data-component=WithClickTracking] button").click();
             //epic user licence check
             log.debug("user licence check");
             PageUtil.tryClick(page, "div[data-component=makePlatformUnsupportedWarningStep] button[data-component=BaseButton", itemUrl);

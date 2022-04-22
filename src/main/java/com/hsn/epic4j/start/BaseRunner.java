@@ -150,6 +150,12 @@ public abstract class BaseRunner {
             PageUtil.crawSet(page);
             //打开epic主页
             page.goTo(epicConfig.getEpicUrl());
+            List<Page> pages = browser.pages();
+            for (Page p : pages) {
+                if (!StrUtil.startWith(p.mainFrame().url(), "http")) {
+                    p.close();
+                }
+            }
             boolean needLogin = iStart.needLogin(page);
             log.debug("needLogin:{}", needLogin);
             if (needLogin) {
