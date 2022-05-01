@@ -1,7 +1,6 @@
 package com.hsn.epic4j;
 
 import cn.hutool.core.io.FileUtil;
-import com.hsn.epic4j.util.PageUtil;
 import com.ruiyun.jvppeteer.core.Puppeteer;
 import com.ruiyun.jvppeteer.core.browser.Browser;
 import com.ruiyun.jvppeteer.core.browser.BrowserFetcher;
@@ -11,7 +10,6 @@ import com.ruiyun.jvppeteer.options.LaunchOptionsBuilder;
 import com.ruiyun.jvppeteer.options.ScreenshotOptions;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
 import org.springframework.core.io.FileUrlResource;
 
 import java.io.File;
@@ -27,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class CrawTest {
 
-    @Test
     @SneakyThrows
     public void test() {
 
