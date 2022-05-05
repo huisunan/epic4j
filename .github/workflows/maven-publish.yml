@@ -62,7 +62,7 @@ jobs:
           push: true
           tags: huisunan/epic4j:latest, huisunan/epic4j:${{ steps.pom-version.outputs.version }}
       #release
-      - name: Upload release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: target/epic4j.jar
+#      - name: Upload release
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          files: target/epic4j.jar
