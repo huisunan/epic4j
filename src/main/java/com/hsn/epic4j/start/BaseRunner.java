@@ -82,7 +82,8 @@ public abstract class BaseRunner {
 
     public void initCron() {
         String cronExpression = epicConfig.getCron();
-        if (StrUtil.isBlank(cronExpression)) {
+        boolean notCron = StrUtil.isBlank(cronExpression);
+        if (notCron) {
             DateTime now = DateUtil.date().offset(DateField.SECOND, 3);
             cronExpression = StrUtil.format("{} {} {} * * ?", now.second(), now.minute(), now.hour(true));
         }
@@ -93,7 +94,8 @@ public abstract class BaseRunner {
         scheduler.schedule(this::start, context -> new CronTrigger(finalCronExpression).nextExecutionTime(context));
         //立即执行一次
         try {
-            start();
+           if(!notCron)
+               start();
         } catch (Exception ignore) {
             log.error("立即执行出错", ignore);
         }
