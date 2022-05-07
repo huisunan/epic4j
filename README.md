@@ -117,8 +117,8 @@ epic:
   multi-user: false
   # 多用户信息
   users:
-  # 错误时截图,默认为false
-  error-screen-shoot: false
+  # 错误时截图,默认为true
+  error-screen-shoot: true
 ```
 
 ### 环境变量
@@ -142,4 +142,5 @@ epic:
 |消息推送||
 |自动更新|✅|
 |多账号批量处理|✅|
+|可视化界面||
 
