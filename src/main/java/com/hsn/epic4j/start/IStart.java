@@ -24,4 +24,8 @@ public interface IStart {
      */
     List<Item> receive(Page page, List<Item> weekFreeItems);
 
+    /**
+     * 获取免费游戏
+     */
+    List<Item> getFreeItems();
 }

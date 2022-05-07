@@ -1,7 +1,13 @@
 package com.hsn.epic4j.start;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.hsn.epic4j.aop.Retry;
 import com.hsn.epic4j.bean.Item;
 import com.hsn.epic4j.bean.PageSlug;
@@ -25,11 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * 主启动类
@@ -193,6 +197,53 @@ public class MainStart implements IStart {
             log.info("所有领取到到游戏:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));
         }
         return receiveItem;
+    }
+
+    /**
+     * 获取免费游戏
+     */
+    @Override
+    @Retry(message = "获取周末游戏失败", value = 10)
+    public List<Item> getFreeItems() {
+        //https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=zh-CN-CN&country=CN&allowCountries=CN
+        String userCountry = "CN";
+        String locate = "zh-CN";
+        String formatUrl = StrUtil.format(epicConfig.getFreeGameUrl(), locate, userCountry, userCountry);
+        log.debug(formatUrl);
+        String res = HttpUtil.get(formatUrl);
+        log.trace("免费游戏json串:\n{}", res);
+        JSONObject json = JSONUtil.parseObj(res);
+        List<Item> list = new ArrayList<>();
+        DateTime now = DateUtil.date();
+        for (JSONObject element : json.getByPath("data.Catalog.searchStore.elements", JSONArray.class).jsonIter()) {
+            if (!"ACTIVE".equals(element.getStr("status"))) {
+                continue;
+            }
+            if (StreamSupport.stream(element.getJSONArray("categories").jsonIter().spliterator(), false)
+                    .anyMatch(item -> "freegames".equals(item.getStr("path")))) {
+                JSONObject promotions = element.getJSONObject("promotions");
+                if (promotions == null) {
+                    continue;
+                }
+                JSONArray promotionalOffers = promotions.getJSONArray("promotionalOffers");
+                if (CollUtil.isNotEmpty(promotionalOffers)) {
+                    if (StreamSupport.stream(promotionalOffers.jsonIter().spliterator(), false)
+                            .flatMap(offerItem -> StreamSupport.stream(offerItem.getJSONArray("promotionalOffers").jsonIter().spliterator(), false))
+                            .anyMatch(offerItem -> {
+                                DateTime startDate = DateUtil.parse(offerItem.getStr("startDate")).setTimeZone(TimeZone.getDefault());
+                                DateTime endDate = DateUtil.parse(offerItem.getStr("endDate")).setTimeZone(TimeZone.getDefault());
+                                JSONObject discountSetting = offerItem.getJSONObject("discountSetting");
+                                return DateUtil.isIn(now, startDate, endDate) && "PERCENTAGE".equals(discountSetting.getStr("discountType"))
+                                        && discountSetting.getInt("discountPercentage") == 0;
+                            })) {
+                        list.add(element.toBean(Item.class));
+                    }
+
+                }
+            }
+
+        }
+        return list;
     }
 
 }
