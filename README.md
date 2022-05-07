@@ -4,6 +4,7 @@
 
 > 免费领取Epic周免游戏，本项目由EpicGamesClaimer而来
 
+QQ交流群:551322748
 
 ## 开始
 
