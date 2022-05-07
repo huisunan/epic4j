@@ -118,7 +118,7 @@ public abstract class BaseRunner {
         checkForUpdate();
         List<UserInfo> userInfo = getUserInfo();
         //获取周免游戏
-        List<Item> weekFreeItems = getWeekFreeItems().stream().peek(i -> {
+        List<Item> weekFreeItems = iStart.getFreeItems().stream().peek(i -> {
             if (StrUtil.endWith(i.getProductSlug(), "/home")) {
                 i.setProductSlug(i.getProductSlug().replace("/home", ""));
             }
@@ -198,49 +198,5 @@ public abstract class BaseRunner {
         }
     }
 
-    /**
-     * 获取免费游戏
-     */
-    @Retry(message = "获取周末游戏失败", value = 5)
-    private List<Item> getWeekFreeItems() {
-        //https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=zh-CN-CN&country=CN&allowCountries=CN
-        String userCountry = "CN";
-        String locate = "zh-CN";
-        String formatUrl = StrUtil.format(epicConfig.getFreeGameUrl(), locate, userCountry, userCountry);
-        log.debug(formatUrl);
-        String res = HttpUtil.get(formatUrl);
-        log.trace("免费游戏json串:\n{}", res);
-        JSONObject json = JSONUtil.parseObj(res);
-        List<Item> list = new ArrayList<>();
-        DateTime now = DateUtil.date();
-        for (JSONObject element : json.getByPath("data.Catalog.searchStore.elements", JSONArray.class).jsonIter()) {
-            if (!"ACTIVE".equals(element.getStr("status"))) {
-                continue;
-            }
-            if (StreamSupport.stream(element.getJSONArray("categories").jsonIter().spliterator(), false)
-                    .anyMatch(item -> "freegames".equals(item.getStr("path")))) {
-                JSONObject promotions = element.getJSONObject("promotions");
-                if (promotions == null) {
-                    continue;
-                }
-                JSONArray promotionalOffers = promotions.getJSONArray("promotionalOffers");
-                if (CollUtil.isNotEmpty(promotionalOffers)) {
-                    if (StreamSupport.stream(promotionalOffers.jsonIter().spliterator(), false)
-                            .flatMap(offerItem -> StreamSupport.stream(offerItem.getJSONArray("promotionalOffers").jsonIter().spliterator(), false))
-                            .anyMatch(offerItem -> {
-                                DateTime startDate = DateUtil.parse(offerItem.getStr("startDate")).setTimeZone(TimeZone.getDefault());
-                                DateTime endDate = DateUtil.parse(offerItem.getStr("endDate")).setTimeZone(TimeZone.getDefault());
-                                JSONObject discountSetting = offerItem.getJSONObject("discountSetting");
-                                return DateUtil.isIn(now, startDate, endDate) && "PERCENTAGE".equals(discountSetting.getStr("discountType"))
-                                        && discountSetting.getInt("discountPercentage") == 0;
-                            })) {
-                        list.add(element.toBean(Item.class));
-                    }
 
-                }
-            }
-
-        }
-        return list;
-    }
 }
