@@ -68,7 +68,7 @@ public class PageUtil {
                     flag = selectItem.getPagePredicate().test(page, selectItem);
                 } catch (Exception e) {
                     if (ignore)
-                        log.debug("ignore exception", e);
+                        log.debug("可以忽略到异常", e);
                     else
                         throw e;
                 }

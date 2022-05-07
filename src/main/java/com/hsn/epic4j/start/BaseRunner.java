@@ -96,8 +96,8 @@ public abstract class BaseRunner {
         try {
            if(!notCron)
                start();
-        } catch (Exception ignore) {
-            log.error("立即执行出错", ignore);
+        } catch (Exception e) {
+            log.error("立即执行出错", e);
         }
     }
 
@@ -133,7 +133,7 @@ public abstract class BaseRunner {
 
         Browser browser = null;
         try {
-            log.info("start {} work", email);
+            log.info("账号[{}]开始工作", email);
             //用户文件路径
             String userDataPath = new FileUrlResource(epicConfig.getDataPath() + File.separator + email).getFile().getAbsolutePath();
             //获取浏览器对象
@@ -142,7 +142,7 @@ public abstract class BaseRunner {
             Page page = iStart.getDefaultPage(browser);
             //加载cookie
             if (StrUtil.isNotBlank(epicConfig.getCookiePath()) && FileUtil.exist(epicConfig.getCookiePath())) {
-                log.debug("load cookie");
+                log.debug("加载cookie");
                 List<CookieParam> cookies = JSONUtil.toBean(IoUtil.read(new FileReader(epicConfig.getCookiePath())),
                         new TypeReference<List<CookieParam>>() {
                         }, false);
@@ -159,7 +159,7 @@ public abstract class BaseRunner {
                 }
             }
             boolean needLogin = iStart.needLogin(page);
-            log.debug("needLogin:{}", needLogin);
+            log.debug("是否需要登录:{}", needLogin ? "是":"否");
             if (needLogin) {
                 iLogin.login(page, email, password);
             }
@@ -179,7 +179,7 @@ public abstract class BaseRunner {
                         .ifPresent(page -> {
                             try {
                                 FileUrlResource errorDir = new FileUrlResource("data/error");
-                                log.debug("create error dir {}", errorDir.getFile().mkdirs());
+                                log.debug("创建data/error目录：{}", errorDir.getFile().mkdirs());
                                 ScreenshotOptions options = new ScreenshotOptions();
                                 options.setQuality(100);
                                 options.setPath(errorDir.getFile().getAbsolutePath() + File.separator + System.currentTimeMillis() + ".jpg");
@@ -209,7 +209,7 @@ public abstract class BaseRunner {
         String formatUrl = StrUtil.format(epicConfig.getFreeGameUrl(), locate, userCountry, userCountry);
         log.debug(formatUrl);
         String res = HttpUtil.get(formatUrl);
-        log.trace("free game json:\n{}", res);
+        log.trace("免费游戏json串:\n{}", res);
         JSONObject json = JSONUtil.parseObj(res);
         List<Item> list = new ArrayList<>();
         DateTime now = DateUtil.date();

@@ -48,7 +48,7 @@ public class MainStart implements IStart {
     @Override
     @SneakyThrows
     public Browser getBrowser(String dataPath) {
-        log.debug("driver data path :{}", dataPath);
+        log.debug("chrome驱动路径 :{}", dataPath);
         if (epicConfig.getNoSandbox()) {
             epicConfig.getDriverArgs().add("--no-sandbox");
         }
@@ -133,36 +133,36 @@ public class MainStart implements IStart {
     @Retry(message = "领取失败")
     public List<Item> receive(Page page, List<Item> weekFreeItems) {
         if (log.isDebugEnabled()) {
-            log.debug("all free items:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));
+            log.debug("所有免费的游戏:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));
         }
         List<Item> receiveItem = new ArrayList<>();
         for (Item item : weekFreeItems) {
             String url = getItemUrl(item);
             String itemUrl = StrUtil.format(epicConfig.getStoreUrl(), url);
-            log.debug("item url:{}", itemUrl);
+            log.debug("游戏url:{}", itemUrl);
             page.goTo(itemUrl);
             //age limit
             PageUtil.tryClick(page, "div[data-component=PDPAgeGate] Button", itemUrl, 8, 1000);
             PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
             if (isInLibrary(page)) {
-                log.debug("{} had in library", item.getTitle());
+                log.debug("游戏[{}]已经在库里", item.getTitle());
                 continue;
             }
             page.waitForSelector("div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]").click();
 //            page.waitForSelector("div[data-component=WithClickTracking] button").click();
             //epic user licence check
-            log.debug("user licence check");
+            log.debug("协议检测开始");
             PageUtil.tryClick(page, "div[data-component=makePlatformUnsupportedWarningStep] button[data-component=BaseButton", itemUrl);
             PageUtil.tryClick(page, "#agree", itemUrl);
             PageUtil.tryClick(page, "div[data-component=EulaModalActions] button[data-component=BaseButton]", itemUrl);
             String purchaseUrl = PageUtil.getStrProperty(page, "#webPurchaseContainer iframe", "src");
-            log.debug("purchase url :{}", purchaseUrl);
+            log.debug("订单链接 :{}", purchaseUrl);
             page.goTo(purchaseUrl);
             PageUtil.tryClick(page, "#purchase-app button[class*=confirm]:not([disabled])", page.mainFrame().url(), 20, 500);
             PageUtil.tryClick(page, "#purchaseAppContainer div.payment-overlay button.payment-btn--primary", page.mainFrame().url());
             PageUtil.findSelectors(page, 10_000, true,
                     () -> {
-                        throw new TimeException("time out");
+                        throw new TimeException("订单状态检测超时");
                     },
                     new SelectItem("#purchase-app div[class*=alert]", () -> {
                         if (item.isDLC()) {
@@ -175,14 +175,14 @@ public class MainStart implements IStart {
                     }),
                     new SelectItem("#talon_frame_checkout_free_prod[style*=visible]", () -> {
                         //需要验证码
-                        throw new PermissionException("CAPTCHA is required for unknown reasons when claiming");
+                        throw new PermissionException("检测到需要验证码");
                     }),
                     new SelectItem("#purchase-app > div", (p, i) -> p.$(i.getSelectors()) == null, () -> {
                         //当订单完成刷新时，该元素不存在，是订单完成后刷新到新页面
                         page.goTo(itemUrl);
                         PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
                         if (!isInLibrary(page)) {
-                            throw new ItemException("An item was mistakenly considered to have been claimed");
+                            throw new ItemException("该游戏被误认为已经认领");
                         }
                         receiveItem.add(item);
                         return SelectItem.SelectCallBack.END;
@@ -190,7 +190,7 @@ public class MainStart implements IStart {
             );
         }
         if (receiveItem.isEmpty()) {
-            log.info("all free week games in your library:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));
+            log.info("所有领取到到游戏:{}", weekFreeItems.stream().map(Item::getTitle).collect(Collectors.joining(",")));
         }
         return receiveItem;
     }
