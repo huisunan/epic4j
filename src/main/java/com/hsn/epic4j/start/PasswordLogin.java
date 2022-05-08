@@ -29,7 +29,7 @@ public class PasswordLogin implements ILogin {
         if (StrUtil.isEmpty(password)) {
             throw new CheckException(email + " 密码不能为空");
         }
-        log.debug("login start");
+        log.debug("开始登录");
         String originUrl = page.mainFrame().url();
         PageUtil.click(page, "div.menu-icon");
         PageUtil.click(page, "div.mobile-buttons a[href='/login']");
@@ -40,24 +40,24 @@ public class PasswordLogin implements ILogin {
         PageUtil.click(page, "#sign-in[tabindex='0']");
         PageUtil.findSelectors(page, 30000, true,
                 () -> {
-                    throw new TimeException("Check login result timeout.");
+                    throw new TimeException("登录超时");
                 },
                 new SelectItem("#talon_frame_login_prod[style*=visible]", () -> {
-                    throw new PermissionException("CAPTCHA is required for unknown reasons when logging in");
+                    throw new PermissionException("未知情况下需要验证码");
                 }),
                 new SelectItem("div.MuiPaper-root[role=alert] h6[class*=subtitle1]", () -> {
                     Object jsonValue = page.waitForSelector("div.MuiPaper-root[role=alert] h6[class*=subtitle1]").getProperty("textContent").jsonValue();
-                    throw new PermissionException("From Epic Games: " + jsonValue);
+                    throw new PermissionException("来自epic的错误消息: " + jsonValue);
                 }),
                 new SelectItem("input[name=code-input-0]", () -> {
-                    throw new PermissionException("From Epic Games need code");
+                    throw new PermissionException("需要校验码");
                 }),
                 new SelectItem(".signed-in", () -> {
-                    log.info("login success");
+                    log.info("登录成功");
                     return SelectItem.SelectCallBack.END;
                 })
         );
 
-        log.debug("login end");
+        log.debug("登录结束");
     }
 }
