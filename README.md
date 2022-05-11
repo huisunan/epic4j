@@ -21,6 +21,10 @@ QQ交流群:551322748
 ```shell
 java -jar -Depic.email=[你的账号] -Depic.password[你的密码] epic4j.jar 
 ```
+使用cookie
+```shell
+java -jar -Depic.email=[你的账号] -Depic.password[你的密码] -Depic.cookiePath=[你的cookie路径]  epic4j.jar 
+```
 
 ### Docker
 
@@ -145,3 +149,11 @@ epic:
 |多账号批量处理|✅|
 |可视化界面||
 
+## 获取cookie
+使用chrome浏览器安装[EditThisCookie](https://chrome.google.com/webstore/detail/editthiscookie/fngmhnnpilhplaeedifhccceomclgfbg)
+![](doc/EditThisCookie.png)
+
+获取网站的cookie
+![](doc/ExportCookie.png)
+
+新建文本文件保存cookie
