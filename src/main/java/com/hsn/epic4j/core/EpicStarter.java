@@ -161,7 +161,9 @@ public class EpicStarter {
             }
         } catch (Exception e) {
             if (epicConfig.getErrorScreenShoot()) {
-                ScreenShootUtil.screen(browser, "data/error", System.currentTimeMillis() + ".jpeg");
+                //输出截图和html信息
+                long currentTimeMillis = System.currentTimeMillis();
+                ScreenShootUtil.screen(browser, "data/error", currentTimeMillis + ".jpeg", currentTimeMillis + ".html");
             }
             log.error("程序异常", e);
         } finally {

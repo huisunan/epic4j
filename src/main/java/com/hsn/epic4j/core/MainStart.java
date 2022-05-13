@@ -49,7 +49,7 @@ public class MainStart implements IStart {
     @Override
     @SneakyThrows
     public Browser getBrowser(String dataPath) {
-        log.debug("chrome驱动路径 :{}", dataPath);
+        log.debug("chrome用户数据路径 :{}", dataPath);
         if (epicConfig.getNoSandbox()) {
             epicConfig.getDriverArgs().add("--no-sandbox");
         }
