@@ -140,10 +140,10 @@ public class MainStart implements IStart {
         for (Item item : weekFreeItems) {
             String url = getItemUrl(item);
             String itemUrl = StrUtil.format(epicConfig.getStoreUrl(), url);
-            log.debug("游戏url:{}", itemUrl);
+            log.info("游戏url:{}", itemUrl);
             page.goTo(itemUrl);
-            //age limit
-            PageUtil.tryClick(page, "div[data-component=PDPAgeGate] Button", itemUrl, 8, 1000);
+            log.info("18+检测");
+            PageUtil.tryClick(page, itemUrl, 8, 1000, "div[data-component=PDPAgeGate] Button");
             PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
             if (isInLibrary(page)) {
                 log.debug("游戏[{}]已经在库里", item.getTitle());
@@ -152,15 +152,31 @@ public class MainStart implements IStart {
             page.waitForSelector("div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]").click();
 //            page.waitForSelector("div[data-component=WithClickTracking] button").click();
             //epic user licence check
-            log.debug("协议检测开始");
-            PageUtil.tryClick(page, "div[data-component=makePlatformUnsupportedWarningStep] button[data-component=BaseButton", itemUrl);
-            PageUtil.tryClick(page, "#agree", itemUrl);
-            PageUtil.tryClick(page, "div[data-component=EulaModalActions] button[data-component=BaseButton]", itemUrl);
+            log.info("首次领取游戏检测||设备检测");
+            PageUtil.tryClick(page,itemUrl,30,100,Arrays.asList(
+                    (p,c)->{
+                        log.trace("[旧]平台不支持检测:{}",c);
+                        p.click("div[data-component=makePlatformUnsupportedWarningStep] button[data-component=BaseButton");
+                        log.info("[旧]平台不支持检测通过");
+                    },
+                    (p,c)->{
+                        log.trace("首次领取游戏检测");
+                        page.click("#agree");
+                        page.click("div[data-component=EulaModalActions] button[data-component=BaseButton]");
+                        log.info("首次领取游戏检测通过");
+                    },
+                    (p,c)->{
+                        log.trace("[新]平台不支持检测:{}",c);
+                        p.click("div[data-component=WarningLayout] button[data-component=BaseButton]");
+                        log.info("[新]平台不支持检测测通过");
+                    }
+            ));
+
             String purchaseUrl = PageUtil.getStrProperty(page, "#webPurchaseContainer iframe", "src");
             log.debug("订单链接 :{}", purchaseUrl);
             page.goTo(purchaseUrl);
-            PageUtil.tryClick(page, "#purchase-app button[class*=confirm]:not([disabled])", page.mainFrame().url(), 20, 500);
-            PageUtil.tryClick(page, "#purchaseAppContainer div.payment-overlay button.payment-btn--primary", page.mainFrame().url());
+            PageUtil.tryClick(page, page.mainFrame().url(), 20, 500, "#purchase-app button[class*=confirm]:not([disabled])");
+            PageUtil.tryClick(page, page.mainFrame().url(), "#purchaseAppContainer div.payment-overlay button.payment-btn--primary");
             PageUtil.findSelectors(page, 30_000, true,
                     () -> {
                         throw new TimeException("订单状态检测超时");
@@ -192,9 +208,6 @@ public class MainStart implements IStart {
                         return SelectItem.SelectCallBack.END;
                     })
             );
-        }
-        if (receiveItem.isEmpty()) {
-            log.info("所有领取到的游戏:{}", receiveItem.stream().map(Item::getTitle).collect(Collectors.joining(",")));
         }
         return receiveItem;
     }
