@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @UtilityClass
@@ -27,11 +28,6 @@ public class PageUtil {
 
     //默认超时时间 30s
     private static final int DEFAULT_TIME_OUT = 30 * 1000;
-
-    public <T> T getJsonValue(Browser browser, String url, String path, Class<T> tClass) {
-        JSONObject json = getJson(url, browser);
-        return json.getByPath(path, tClass);
-    }
 
     @SneakyThrows
     public JSONObject getJson(String url, Browser browser) {
@@ -108,7 +104,11 @@ public class PageUtil {
 
     @SneakyThrows
     public String getStrProperty(Page page, String selector, String property) {
-        return getElementStrProperty(page.waitForSelector(selector), property);
+        AtomicReference<String> res = new AtomicReference<>();
+        elementHandle(page,selector,30,1,e->{
+            res.set(getElementStrProperty(e, property));
+        });
+        return res.get();
     }
 
     public void click(Page page, String selector) {
