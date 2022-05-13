@@ -2,7 +2,6 @@ package com.hsn.epic4j.core;
 
 import cn.hutool.core.util.StrUtil;
 import com.hsn.epic4j.core.bean.SelectItem;
-import com.hsn.epic4j.core.config.EpicConfig;
 import com.hsn.epic4j.core.exception.CheckException;
 import com.hsn.epic4j.core.exception.PermissionException;
 import com.hsn.epic4j.core.exception.TimeException;
@@ -11,8 +10,6 @@ import com.ruiyun.jvppeteer.core.page.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 @Slf4j
 @RequiredArgsConstructor

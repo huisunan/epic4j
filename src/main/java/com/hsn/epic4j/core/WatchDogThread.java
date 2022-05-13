@@ -1,11 +1,9 @@
 package com.hsn.epic4j.core;
 
-import cn.hutool.core.collection.CollUtil;
 import com.hsn.epic4j.core.util.ScreenShootUtil;
 import com.ruiyun.jvppeteer.core.browser.Browser;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor

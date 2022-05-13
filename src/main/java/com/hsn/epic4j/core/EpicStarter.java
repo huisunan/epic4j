@@ -118,6 +118,7 @@ public class EpicStarter {
         Browser browser = null;
         WatchDogThread watchDogThread = null;
         try {
+            ThreadContext.init(epicConfig.getTimeout(),epicConfig.getInterval());
             log.info("账号[{}]开始工作", userInfo.getEmail());
             //用户文件路径
             String userDataPath = new FileUrlResource(epicConfig.getDataPath() + File.separator + userInfo.getEmail()).getFile().getAbsolutePath();
@@ -140,7 +141,7 @@ public class EpicStarter {
                 watchDogThread.start();
             }
             //打开epic主页
-            page.goTo(epicConfig.getEpicUrl());
+            iStart.goToEpic(page);
             List<Page> pages = browser.pages();
             for (Page p : pages) {
                 if (!StrUtil.startWith(p.mainFrame().url(), "http")) {
@@ -173,6 +174,7 @@ public class EpicStarter {
             if (browser != null) {
                 browser.close();
             }
+            ThreadContext.clear();
         }
     }
 

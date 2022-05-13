@@ -3,6 +3,7 @@ package com.hsn.epic4j.core.util;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.hsn.epic4j.core.ThreadContext;
 import com.hsn.epic4j.core.bean.SelectItem;
 import com.hsn.epic4j.core.exception.TimeException;
 import com.ruiyun.jvppeteer.core.browser.Browser;
@@ -25,13 +26,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 @UtilityClass
 public class PageUtil {
-
-    //默认时间间隔 100ms
-    private static final int DEFAULT_INTERVAL = 100;
-
-    //默认超时时间 30s
-    private static final int DEFAULT_TIME_OUT = 30 * 1000;
-
     @SneakyThrows
     public JSONObject getJson(String url, Browser browser) {
         Page page = browser.newPage();
@@ -55,7 +49,7 @@ public class PageUtil {
      */
     @SneakyThrows
     public void findSelectors(Page page, Integer timeout, Boolean ignore, SelectItem.SelectCallBack timeoutBack, SelectItem... selectItems) {
-        timer(timeout, DEFAULT_INTERVAL, i -> {
+        timer(timeout, ThreadContext.getInterval(), i -> {
             for (SelectItem selectItem : selectItems) {
                 boolean flag = false;
                 try {
@@ -78,7 +72,7 @@ public class PageUtil {
 
 
     public void waitForTextChange(Page page, String selector, String text) {
-        waitForTextChange(page, selector, text, DEFAULT_TIME_OUT, DEFAULT_INTERVAL);
+        waitForTextChange(page, selector, text, ThreadContext.getTimeout(), ThreadContext.getInterval());
     }
 
     @SneakyThrows
@@ -109,7 +103,7 @@ public class PageUtil {
     @SneakyThrows
     public String getStrProperty(Page page, String selector, String property) {
         AtomicReference<String> res = new AtomicReference<>();
-        elementHandle(page, selector, 30, 1, e -> {
+        elementHandle(page, selector, ThreadContext.getTimeout(), ThreadContext.getInterval(), e -> {
             res.set(getElementStrProperty(e, property));
         });
         return res.get();
@@ -125,8 +119,8 @@ public class PageUtil {
 
     @SneakyThrows
     private void timer(Integer timeout, Integer interval, EFunction<Integer, Boolean> function, ERun end) {
-        timeout = ObjectUtil.defaultIfNull(timeout, DEFAULT_TIME_OUT);
-        interval = ObjectUtil.defaultIfNull(interval, DEFAULT_INTERVAL);
+        timeout = ObjectUtil.defaultIfNull(timeout, ThreadContext.getTimeout());
+        interval = ObjectUtil.defaultIfNull(interval, ThreadContext.getInterval());
         for (int i = 0; (i * interval) < timeout; i++) {
             if (function.accept(i)) {
                 return;
@@ -172,7 +166,9 @@ public class PageUtil {
     public void tryClick(Page page, String original, Integer retry, Integer interval, List<EBiConsumer<Page, Integer>> consumers) {
         Set<EBiConsumer<Page, Integer>> successSet = new HashSet<>();
         for (int i = 0; i < retry; i++) {
-            if (!page.mainFrame().url().equals(original)) {
+            String mainFrameUrl = page.mainFrame().url();
+            log.trace("\nmainFrameUrl:{}\noriginal:{}",mainFrameUrl,original);
+            if (!mainFrameUrl.equals(original)) {
                 return;
             }
             for (EBiConsumer<Page, Integer> consumer : consumers) {
@@ -190,7 +186,7 @@ public class PageUtil {
     }
 
     public void waitUrlChange(Page page, String originUrl) {
-        timer(DEFAULT_TIME_OUT, DEFAULT_INTERVAL, i -> !originUrl.equals(page.mainFrame().url()), () -> {
+        timer(ThreadContext.getTimeout(), ThreadContext.getInterval(), i -> !originUrl.equals(page.mainFrame().url()), () -> {
             throw new TimeoutException("login url not change");
         });
     }
