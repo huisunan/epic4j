@@ -15,6 +15,9 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -105,7 +108,7 @@ public class PageUtil {
     @SneakyThrows
     public String getStrProperty(Page page, String selector, String property) {
         AtomicReference<String> res = new AtomicReference<>();
-        elementHandle(page,selector,30,1,e->{
+        elementHandle(page, selector, 30, 1, e -> {
             res.set(getElementStrProperty(e, property));
         });
         return res.get();
@@ -153,22 +156,33 @@ public class PageUtil {
 
     }
 
-    public void tryClick(Page page, String selector, String original) {
-        tryClick(page, selector, original, 3, 500);
+    public void tryClick(Page page, String original, String selector) {
+        tryClick(page, original, 3, 500, selector);
+    }
+
+    public void tryClick(Page page, String original, Integer retry, Integer interval, String selector) {
+        tryClick(page, original, retry, interval, Collections.singletonList((p, c) -> {
+            log.trace("try click {} count:{}", selector, c);
+            page.click(selector);
+        }));
     }
 
     @SneakyThrows
-    public void tryClick(Page page, String selector, String original, Integer retry, Integer interval) {
+    public void tryClick(Page page, String original, Integer retry, Integer interval, List<EBiConsumer<Page, Integer>> consumers) {
+        Set<EBiConsumer<Page, Integer>> successSet = new HashSet<>();
         for (int i = 0; i < retry; i++) {
-            if (page.mainFrame().url().equals(original)) {
+            if (!page.mainFrame().url().equals(original)) {
+                return;
+            }
+            for (EBiConsumer<Page, Integer> consumer : consumers) {
                 try {
-                    log.trace("try click {} count:{}", selector, i);
-                    page.click(selector);
-                    return;
-                } catch (Exception ignore) {
-                    Thread.sleep(interval);
+                    consumer.accept(page, i);
+                    successSet.add(consumer);
+                } catch (Exception ignored) {
                 }
-            } else {
+                TimeUnit.MILLISECONDS.sleep(interval);
+            }
+            if (successSet.size() >= consumers.size()) {
                 return;
             }
         }
@@ -182,6 +196,10 @@ public class PageUtil {
 
     public interface EConsumer<T> {
         void accept(T t) throws Exception;
+    }
+
+    public interface EBiConsumer<T, U> {
+        void accept(T t, U u) throws Exception;
     }
 
     public interface ESupply<T> {
