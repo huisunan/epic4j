@@ -155,20 +155,15 @@ public class MainStart implements IStart {
             log.info("首次领取游戏检测||设备检测");
             PageUtil.tryClick(page,itemUrl,30,100,Arrays.asList(
                     (p,c)->{
-                        log.trace("[旧]平台不支持检测:{}",c);
-                        p.click("div[data-component=makePlatformUnsupportedWarningStep] button[data-component=BaseButton");
-                        log.info("[旧]平台不支持检测通过");
-                    },
-                    (p,c)->{
                         log.trace("首次领取游戏检测");
                         page.click("#agree");
                         page.click("div[data-component=EulaModalActions] button[data-component=BaseButton]");
                         log.info("首次领取游戏检测通过");
                     },
                     (p,c)->{
-                        log.trace("[新]平台不支持检测:{}",c);
+                        log.trace("平台不支持检测:{}",c);
                         p.click("div[data-component=WarningLayout] button[data-component=BaseButton]");
-                        log.info("[新]平台不支持检测测通过");
+                        log.info("平台不支持检测测通过");
                     }
             ));
 
