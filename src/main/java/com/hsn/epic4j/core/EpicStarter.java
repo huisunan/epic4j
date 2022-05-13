@@ -1,6 +1,5 @@
 package com.hsn.epic4j.core;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
@@ -12,12 +11,12 @@ import cn.hutool.json.JSONUtil;
 import com.hsn.epic4j.core.bean.Item;
 import com.hsn.epic4j.core.bean.UserInfo;
 import com.hsn.epic4j.core.config.EpicConfig;
+import com.hsn.epic4j.core.notify.ConsoleNotify;
 import com.hsn.epic4j.core.notify.INotify;
 import com.hsn.epic4j.core.util.PageUtil;
 import com.hsn.epic4j.core.util.ScreenShootUtil;
 import com.ruiyun.jvppeteer.core.browser.Browser;
 import com.ruiyun.jvppeteer.core.page.Page;
-import com.ruiyun.jvppeteer.options.ScreenshotOptions;
 import com.ruiyun.jvppeteer.protocol.network.CookieParam;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -27,11 +26,9 @@ import org.springframework.scheduling.support.CronTrigger;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.Proxy;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -48,7 +45,7 @@ public class EpicStarter {
 
 
     private ThreadPoolTaskScheduler scheduler;
-    private List<INotify> notifies;
+    private List<INotify> notifies = new ArrayList<>();
 
 
     public EpicStarter(EpicConfig epicConfig, IStart iStart, ILogin iLogin, IUpdate update, List<UserInfo> userInfos) {
@@ -59,6 +56,7 @@ public class EpicStarter {
         this.iLogin = iLogin;
         this.update = update;
         this.userInfos = userInfos;
+        this.notifies.add(new ConsoleNotify());
         this.initCron();
     }
 
