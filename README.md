@@ -92,8 +92,6 @@ epic:
   dataPath: ./data
   # 浏览器启动参数
   driverArgs:
-  # epic站点url
-  epicUrl: https://www.epicgames.com/store/en-US/
   # email邮箱地址
   email:
   # 密码
@@ -102,14 +100,6 @@ epic:
   headLess: true
   # browserVersion指定chromium的版本,可能有一定风险
   browser-version:
-  # checkLoginUrl epic登录判断api
-  check-login-url: https://www.epicgames.com/account/v2/ajaxCheckLogin
-  # userInfoUrl获取用户信息url
-  user-info-url: https://www.epicgames.com/account/v2/personal/ajaxGet?sessionInvalidated=true
-  # freeGameUrl免费游戏url
-  free-game-url: https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale={}&country={}&allowCountries={}
-  # storeUrl商店url
-  store-url: https://www.epicgames.com/store/en-US/p/{}
   # crontab表达式,不填写的情况下是每天程序启动的时分秒运行一次
   cron:
   # noSandbox非沙盒运行
@@ -124,6 +114,10 @@ epic:
   users:
   # 错误时截图,默认为true
   error-screen-shoot: true
+  # 操作超时时间ms,默认30s
+  timeout: 30000
+  # 操作间隔ms,间隔越短,轮询越快,适当控制
+  interval: 100
 ```
 
 ### 环境变量
