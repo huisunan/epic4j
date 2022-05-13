@@ -8,8 +8,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-
 /**
  * @author hsn
  * 2022/1/6
