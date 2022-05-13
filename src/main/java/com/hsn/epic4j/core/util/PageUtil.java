@@ -78,7 +78,7 @@ public class PageUtil {
 
 
     public void waitForTextChange(Page page, String selector, String text) {
-        waitForTextChange(page, selector, text, 3_000, 100);
+        waitForTextChange(page, selector, text, DEFAULT_TIME_OUT, DEFAULT_INTERVAL);
     }
 
     @SneakyThrows
@@ -88,7 +88,8 @@ public class PageUtil {
             log.trace("wait {} text change count {}", selector, i);
             if (elementHandle != null) {
                 String textContent = getElementStrProperty(elementHandle, "textContent");
-                return !text.equals(textContent);
+                log.trace("textContent:{}",textContent);
+                return !text.equalsIgnoreCase(textContent);
             }
             return false;
         }, () -> {

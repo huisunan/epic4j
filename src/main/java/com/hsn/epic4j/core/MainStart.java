@@ -45,6 +45,7 @@ import java.util.stream.StreamSupport;
 public class MainStart implements IStart {
     private final EpicConfig epicConfig;
 
+    private final String LOADING_TEXT = "loading";
 
     @Override
     @SneakyThrows
@@ -144,7 +145,7 @@ public class MainStart implements IStart {
             page.goTo(itemUrl);
             log.info("18+检测");
             PageUtil.tryClick(page, itemUrl, 8, 1000, "div[data-component=PDPAgeGate] Button");
-            PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
+            PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", LOADING_TEXT);
             if (isInLibrary(page)) {
                 log.debug("游戏[{}]已经在库里", item.getTitle());
                 continue;
@@ -194,7 +195,7 @@ public class MainStart implements IStart {
                     new SelectItem("#purchase-app > div", (p, i) -> p.$(i.getSelectors()) == null, () -> {
                         //当订单完成刷新时，该元素不存在，是订单完成后刷新到新页面
                         page.goTo(itemUrl);
-                        PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
+                        PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", LOADING_TEXT);
                         if (!isInLibrary(page)) {
                             throw new ItemException("该游戏被误认为已经认领");
                         }
