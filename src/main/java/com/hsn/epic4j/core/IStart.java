@@ -31,4 +31,9 @@ public interface IStart {
      * 获取免费游戏
      */
     List<Item> getFreeItems();
+
+    /**
+     * 跳转到epic
+     */
+    void goToEpic(Page page);
 }

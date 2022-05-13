@@ -23,6 +23,7 @@ import com.ruiyun.jvppeteer.core.browser.BrowserFetcher;
 import com.ruiyun.jvppeteer.core.page.Page;
 import com.ruiyun.jvppeteer.options.LaunchOptions;
 import com.ruiyun.jvppeteer.options.LaunchOptionsBuilder;
+import com.ruiyun.jvppeteer.options.PageNavigateOptions;
 import com.ruiyun.jvppeteer.options.Viewport;
 import com.ruiyun.jvppeteer.util.FileUtil;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ import java.util.stream.StreamSupport;
 public class MainStart implements IStart {
     private final EpicConfig epicConfig;
 
+    private final String LOADING_TEXT = "loading";
 
     @Override
     @SneakyThrows
@@ -139,12 +141,12 @@ public class MainStart implements IStart {
         List<Item> receiveItem = new ArrayList<>();
         for (Item item : weekFreeItems) {
             String url = getItemUrl(item);
-            String itemUrl = StrUtil.format(epicConfig.getStoreUrl(), url);
+            String itemUrl = StrUtil.format(UrlConstants.storeUrl, url);
             log.info("游戏url:{}", itemUrl);
             page.goTo(itemUrl);
             log.info("18+检测");
             PageUtil.tryClick(page, itemUrl, 8, 1000, "div[data-component=PDPAgeGate] Button");
-            PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
+            PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", LOADING_TEXT);
             if (isInLibrary(page)) {
                 log.debug("游戏[{}]已经在库里", item.getTitle());
                 continue;
@@ -153,20 +155,10 @@ public class MainStart implements IStart {
 //            page.waitForSelector("div[data-component=WithClickTracking] button").click();
             //epic user licence check
             log.info("首次领取游戏检测||设备检测");
-            PageUtil.tryClick(page,itemUrl,30,100,Arrays.asList(
-                    (p,c)->{
-                        log.trace("首次领取游戏检测");
-                        page.click("#agree");
-                        page.click("div[data-component=EulaModalActions] button[data-component=BaseButton]");
-                        log.info("首次领取游戏检测通过");
-                    },
-                    (p,c)->{
-                        log.trace("平台不支持检测:{}",c);
-                        p.click("div[data-component=WarningLayout] button[data-component=BaseButton]");
-                        log.info("平台不支持检测测通过");
-                    }
+            PageUtil.tryClick(page, itemUrl, 30, 100, Arrays.asList(
+                    userLicenceCheck(),
+                    platformCheck()
             ));
-
             String purchaseUrl = PageUtil.getStrProperty(page, "#webPurchaseContainer iframe", "src");
             log.debug("订单链接 :{}", purchaseUrl);
             page.goTo(purchaseUrl);
@@ -194,17 +186,34 @@ public class MainStart implements IStart {
                     new SelectItem("#purchase-app > div", (p, i) -> p.$(i.getSelectors()) == null, () -> {
                         //当订单完成刷新时，该元素不存在，是订单完成后刷新到新页面
                         page.goTo(itemUrl);
-                        PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", "Loading");
+                        PageUtil.waitForTextChange(page, "div[data-component=DesktopSticky] button[data-testid=purchase-cta-button]", LOADING_TEXT);
                         if (!isInLibrary(page)) {
                             throw new ItemException("该游戏被误认为已经认领");
                         }
-                        log.info("游戏领取成功:{}",item.getTitle());
+                        log.info("游戏领取成功:{}", item.getTitle());
                         receiveItem.add(item);
                         return SelectItem.SelectCallBack.END;
                     })
             );
         }
         return receiveItem;
+    }
+
+    private PageUtil.EBiConsumer<Page, Integer> platformCheck() {
+        return (p, c) -> {
+            log.trace("平台不支持检测:{}", c);
+            p.click("div[data-component=WarningLayout] button[data-component=BaseButton]");
+            log.info("平台不支持检测测通过");
+        };
+    }
+
+    private PageUtil.EBiConsumer<Page, Integer> userLicenceCheck() {
+        return (p, c) -> {
+            log.trace("首次领取游戏检测");
+            p.click("#agree");
+            p.click("div[data-component=EulaModalActions] button[data-component=BaseButton]");
+            log.info("首次领取游戏检测通过");
+        };
     }
 
     /**
@@ -216,7 +225,7 @@ public class MainStart implements IStart {
         //https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=zh-CN-CN&country=CN&allowCountries=CN
         String userCountry = "CN";
         String locate = "zh-CN";
-        String formatUrl = StrUtil.format(epicConfig.getFreeGameUrl(), locate, userCountry, userCountry);
+        String formatUrl = StrUtil.format(UrlConstants.freeGameUrl, locate, userCountry, userCountry);
         log.debug(formatUrl);
         String res = HttpUtil.get(formatUrl);
         log.trace("免费游戏json串:\n{}", res);
@@ -252,6 +261,18 @@ public class MainStart implements IStart {
 
         }
         return list;
+    }
+
+    /**
+     * 跳转到epic
+     */
+    @Override
+    @SneakyThrows
+    @Retry(message = "跳转epic",value = 5)
+    public void goToEpic(Page page) {
+        PageNavigateOptions options = new PageNavigateOptions();
+        options.setTimeout(ThreadContext.getTimeout());
+        page.goTo(UrlConstants.epicUrl,options,true);
     }
 
 }
