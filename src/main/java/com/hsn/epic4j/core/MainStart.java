@@ -193,9 +193,6 @@ public class MainStart implements IStart {
                     })
             );
         }
-        if (receiveItem.isEmpty()) {
-            log.info("所有领取到的游戏:{}", receiveItem.stream().map(Item::getTitle).collect(Collectors.joining(",")));
-        }
         return receiveItem;
     }
 
