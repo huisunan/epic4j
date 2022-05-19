@@ -10,7 +10,7 @@
     </parent>
     <groupId>io.github.huisunan</groupId>
     <artifactId>epic4j</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.3</version>
     <name>epic4j</name>
     <description>epic4j</description>
     <properties>
