@@ -11,6 +11,7 @@ public class Item {
     //基础游戏
     public static String BASE_GAME = "BASE_GAME";
     public static String DLC = "DLC";
+    public static String OTHERS ="OTHERS";
 
 
     private String title;
