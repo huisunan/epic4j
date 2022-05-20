@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -103,10 +104,11 @@ public class MainStart implements IStart {
 
     private String getItemUrl(Item item) {
         String url = null;
-        if (Item.BASE_GAME.equals(item.getOfferType())) {
-            url = item.getProductSlug();
-        } else if (Item.DLC.equals(item.getOfferType())) {
+        if (Item.DLC.equals(item.getOfferType())) {
             url = item.getUrlSlug();
+        } else {
+            url = item.getProductSlug();
+
         }
         if (url != null) {
             return url;
@@ -268,11 +270,11 @@ public class MainStart implements IStart {
      */
     @Override
     @SneakyThrows
-    @Retry(message = "跳转epic",value = 5)
+    @Retry(message = "跳转epic", value = 5)
     public void goToEpic(Page page) {
         PageNavigateOptions options = new PageNavigateOptions();
         options.setTimeout(ThreadContext.getTimeout());
-        page.goTo(UrlConstants.epicUrl,options,true);
+        page.goTo(UrlConstants.epicUrl, options, true);
     }
 
 }
