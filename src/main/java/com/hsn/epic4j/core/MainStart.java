@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -52,7 +51,6 @@ public class MainStart implements IStart {
     @Override
     @SneakyThrows
     public Browser getBrowser(String dataPath) {
-        log.debug("chrome用户数据路径 :{}", dataPath);
         if (epicConfig.getNoSandbox()) {
             epicConfig.getDriverArgs().add("--no-sandbox");
         }
@@ -82,6 +80,7 @@ public class MainStart implements IStart {
         viewport.setWidth(600);
         viewport.setHeight(1000);
         viewport.setHasTouch(true);
+        viewport.setIsMobile(true);
         page.setViewport(viewport);
         return page;
     }
@@ -103,7 +102,7 @@ public class MainStart implements IStart {
 
 
     private String getItemUrl(Item item) {
-        String url = null;
+        String url;
         if (Item.DLC.equals(item.getOfferType())) {
             url = item.getUrlSlug();
         } else {

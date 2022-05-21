@@ -45,8 +45,12 @@ docker run -d -e EMAIL=[你的邮箱] -e PASSWORD=[你的密码] -e COOKIE_PATH=
 [具体配置](#yaml)
 
 ```shell
+# 创建数据目录
 mkdir ~/epic4j
+# 创建配置文件
 vim ~/epic4j/application.yml
+# 创建持久卷,用来保存用户数据，再升级容器时保存用户数据
+docker volume create epic4jVolume
 ```
 
 application.yml的配置如下
@@ -62,7 +66,7 @@ epic:
 运行docker容器,挂载配置文件到/opt/epic4j/config下
 
 ```shell
-docker run -d -v ~/epic4j:/opt/epic4j/config --name myepic huisunan/epic4j:latest
+docker run -d -v ~/epic4j:/opt/epic4j/config -v epic4jVolume:/opt/epic4j/data --name myepic huisunan/epic4j:latest
 ```
 
 #### 多用户配置
@@ -71,6 +75,8 @@ docker run -d -v ~/epic4j:/opt/epic4j/config --name myepic huisunan/epic4j:lates
 
 ```yaml
 epic:
+  #开启自动更新,可选
+  auto-update: true
   # 开启多用户支持
   multi-user: true
   users:

@@ -1,6 +1,6 @@
 epic:
   driver-args:
-    - "--blink-settings=imagesEnabled=false"
+    #- "--blink-settings=imagesEnabled=false"
     - "--no-first-run"
     - "--disable-gpu"
     - "--no-default-browser-check"

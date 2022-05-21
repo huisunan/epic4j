@@ -118,10 +118,12 @@ public class EpicStarter {
         Browser browser = null;
         WatchDogThread watchDogThread = null;
         try {
-            ThreadContext.init(epicConfig.getTimeout(),epicConfig.getInterval());
-            log.info("账号[{}]开始工作", userInfo.getEmail());
+            ThreadContext.init(epicConfig.getTimeout(), epicConfig.getInterval());
+            String desensitizedEmail = email(userInfo.getEmail());
+            log.info("账号[{}]开始工作", desensitizedEmail);
             //用户文件路径
             String userDataPath = new FileUrlResource(epicConfig.getDataPath() + File.separator + userInfo.getEmail()).getFile().getAbsolutePath();
+            log.debug("用户数据目录:{}", userDataPath.replace(userInfo.getEmail(), desensitizedEmail));
             //获取浏览器对象
             browser = iStart.getBrowser(userDataPath);
             //获取默认page
@@ -136,10 +138,8 @@ public class EpicStarter {
             }
             //反爬虫设置
             PageUtil.crawSet(page);
-            if(epicConfig.getHeadLess()){
-                watchDogThread = new WatchDogThread(browser);
-                watchDogThread.start();
-            }
+            watchDogThread = new WatchDogThread(browser, Thread.currentThread(), epicConfig.getHeadLess());
+            watchDogThread.start();
             //打开epic主页
             iStart.goToEpic(page);
             List<Page> pages = browser.pages();
@@ -168,7 +168,7 @@ public class EpicStarter {
             }
             log.error("程序异常", e);
         } finally {
-            if (watchDogThread != null){
+            if (watchDogThread != null) {
                 watchDogThread.interrupt();
             }
             if (browser != null) {
@@ -176,6 +176,17 @@ public class EpicStarter {
             }
             ThreadContext.clear();
         }
+    }
+
+    protected String email(String email) {
+        if (StrUtil.isBlank(email)) {
+            return StrUtil.EMPTY;
+        }
+        int index = StrUtil.indexOf(email, '@');
+        if (index <= 3) {
+            return email;
+        }
+        return StrUtil.hide(email, 3, index);
     }
 
 }
